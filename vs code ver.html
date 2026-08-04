@@ -1212,6 +1212,17 @@ function boardFilterItems(list){
     return true;
   });
 }
+const SIDEPANEL_DEFAULT_HTML=`
+      <div class="quick-actions">
+        <div class="qa-row">
+          <button class="qa-btn primary" onclick="openQuickTask('urgent')">⚠ 우선 점검</button>
+          <button class="qa-btn soft" onclick="openQuickTask('today')">🔧 오늘 작업</button>
+          <button class="qa-btn ghost" onclick="openQuickTask('spare')">📦 예비품 체크</button>
+        </div>
+      </div>
+      <div class="quick-state" id="quickState" style="display:none"></div>
+      <div class="quick-list" id="quickList"></div>
+      <div class="empty" style="padding:44px 12px">현황판에서 TM 칸을 선택하십시오.<br><br>선택 즉시 고장이력 전체와<br>위험도 산출 근거가 표시됩니다.</div>`;
 let quickMode='board';
 function renderQuickState(){
   const box=document.getElementById('quickState');
@@ -1221,7 +1232,14 @@ function renderQuickState(){
   box.style.display='flex';
   box.innerHTML=`<div class="qs-main"><b>${msg}</b><span>현재 화면에서 다른 항목을 선택해도 이 모드는 유지됩니다. 아래 버튼으로 바로 메인 현황판으로 돌아갈 수 있습니다.</span></div><button class="qa-btn primary" onclick="resetQuickMode()">🏠 현황판으로 돌아가기</button>`;
 }
-function resetQuickMode(){quickMode='board';renderQuickState();renderBoard();toast('📍 현황판으로 돌아왔습니다');}
+function resetQuickMode(){
+  quickMode='board';
+  selSerial=null;
+  const sp=document.getElementById('sidePanel');
+  if(sp)sp.innerHTML=SIDEPANEL_DEFAULT_HTML;
+  renderBoard();
+  toast('📍 현황판으로 돌아왔습니다');
+}
 function buildQuickTasks(){
   const all=allAssessed();
   const favItems=getFavoriteItems();
@@ -1383,7 +1401,7 @@ function renderSidePanel(serial){
      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap" class="noprint">
        <button class="btn sec" style="flex:1;min-width:140px" onclick="gotoAsset('${m.시리얼}')">📄 리포트·인쇄</button>
        ${isSpare?'':`<button class="btn ghost" style="flex:1;min-width:140px" onclick="prefillWO('${m.시리얼}')">📝 수선의뢰 작성</button>`}
-       ${quickMode!=='board'?`<button class="btn ghost" style="flex:1;min-width:140px" onclick="resetQuickMode()">🏠 현황판으로</button>`:''}
+       <button class="btn ghost" style="flex:1;min-width:140px" onclick="resetQuickMode()">🏠 목록으로 돌아가기</button>
      </div>
    </div>`;
 }
