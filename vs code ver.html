@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TM-CBM 견인전동기 진단·수선의뢰 시스템</title>
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TM-CBM">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230d1117'/%3E%3Crect x='10' y='10' width='172' height='172' rx='32' fill='%234da3ff'/%3E%3Ctext x='96' y='122' font-family='Arial,sans-serif' font-size='80' font-weight='800' text-anchor='middle' fill='%230d1117'%3ETM%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='36' fill='%230d1117'/%3E%3Crect x='10' y='10' width='172' height='172' rx='28' fill='%234da3ff'/%3E%3Ctext x='96' y='122' font-family='Arial,sans-serif' font-size='80' font-weight='800' text-anchor='middle' fill='%230d1117'%3ETM%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22TM-CBM%20%EC%A7%84%EB%8B%A8%C2%B7%EC%88%98%EC%84%A0%EC%9D%98%EB%A2%B0%20%EC%8B%9C%EC%8A%A4%ED%85%9C%22%2C%22short_name%22%3A%22TM-CBM%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%2312161c%22%2C%22theme_color%22%3A%22%230d1117%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%25200%2520192%2520192%27%253E%253Crect%2520width%3D%27192%27%2520height%3D%27192%27%2520rx%3D%2736%27%2520fill%3D%27%25230d1117%27%2F%253E%253Crect%2520x%3D%2710%27%2520y%3D%2710%27%2520width%3D%27172%27%2520height%3D%27172%27%2520rx%3D%2728%27%2520fill%3D%27%25234da3ff%27%2F%253E%253Ctext%2520x%3D%2796%27%2520y%3D%27122%27%2520font-family%3D%27Arial%2Csans-serif%27%2520font-size%3D%2780%27%2520font-weight%3D%27800%27%2520text-anchor%3D%27middle%27%2520fill%3D%27%25230d1117%27%253ETM%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D">
 <script>/* Chart.js */
 /*!
  * Chart.js v4.4.1
@@ -56,6 +64,7 @@ nav a{display:flex;align-items:center;gap:9px;color:var(--ink2);padding:11px 18p
 nav a:hover{background:#1d2530;color:var(--ink)}
 nav a.active{background:#1d2530;color:#fff;border-left-color:var(--accent);font-weight:600}
 nav .navhead{font-size:10px;color:var(--ink3);letter-spacing:.14em;padding:14px 18px 5px}
+.nav-badge{margin-left:auto;background:var(--g1);color:#fff;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:999px;font-family:var(--mono);line-height:1.6}
 main{flex:1;padding:20px 24px;min-width:0}
 .page{display:none}.page.active{display:block}
 .crumb{font-size:11.5px;color:var(--ink3);margin-bottom:4px}
@@ -249,6 +258,9 @@ textarea{resize:vertical;min-height:66px}
 .sp-grade{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:13px}
 .sp-grade .big{font-size:15px;font-weight:700}
 .sp-body{padding:13px 16px}
+.trend-chip{display:block;margin:0 16px 12px;font-size:12px;padding:8px 11px;border-radius:6px;font-weight:600}
+.trend-up{background:#3a1f1c;color:#ffb3ab;border:1px solid #5a2f2a}
+.trend-down{background:#1a2e21;color:#b7e6c3;border:1px solid #2c5a3c}
 .sp-facts{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;font-size:12px;margin-bottom:12px}
 .sp-facts span{color:var(--ink3);font-size:10.5px;display:block}
 .sp-facts b{font-family:var(--mono);font-size:12.5px}
@@ -403,7 +415,7 @@ textarea{resize:vertical;min-height:66px}
 <div class="layout">
 <nav class="noprint">
   <div class="navhead">업 무</div>
-  <a data-page="pgBoard" class="active">🚇 취부 현황판</a>
+  <a data-page="pgBoard" class="active">🚇 취부 현황판<span class="nav-badge" id="navUrgentBadge" style="display:none"></span></a>
   <a data-page="pgWO">📝 수선의뢰 등록</a>
   <a data-page="pgHist">📚 이력 조회</a>
   <a data-page="pgAsset">📄 TM 리포트</a>
@@ -960,6 +972,15 @@ function assess(m){
   return {...m,...st,O,S,C,g,age,loc:carLabel(m.편성,m.위치)};
 }
 function allAssessed(){ return master.map(assess); }
+function trendInfo(evsAll){
+  const yEvs=evsAll.filter(e=>e.고장성==='Y'&&e.일자&&e.일자!=='None'&&e.일자>=WIN_START).map(e=>e.일자).sort();
+  if(yEvs.length<2)return null;
+  const mid=_fmt(new Date((new Date(WIN_START).getTime()+new Date(CUR).getTime())/2));
+  const older=yEvs.filter(d=>d<mid).length, recent=yEvs.filter(d=>d>=mid).length;
+  if(recent>older)return{dir:'up',older,recent};
+  if(older>recent)return{dir:'down',older,recent};
+  return{dir:'flat',older,recent};
+}
 function rank(list){ return list.sort((a,b)=>b.C-a.C||(b.age??0)-(a.age??0)); }
 function addRecent(serial){
   const s=String(serial||'').trim();
@@ -996,7 +1017,7 @@ function getRecommendedActions(m){
 }
 
 // ================= 렌더 =================
-function renderAll(){ qcRecompute(); renderKPI(); renderExecutiveHero(); renderExecSummary(); if(document.getElementById('pgRaw')&&document.getElementById('pgRaw').classList.contains('active'))renderRaw(); renderTop(); renderMatrix(); renderCharts(); renderRecent(); renderRisk(); renderQC(); renderLists(); renderStamp(); renderBoard(); renderHist(); }
+function renderAll(){ qcRecompute(); renderKPI(); renderNavBadge(); renderExecutiveHero(); renderExecSummary(); if(document.getElementById('pgRaw')&&document.getElementById('pgRaw').classList.contains('active'))renderRaw(); renderTop(); renderMatrix(); renderCharts(); renderRecent(); renderRisk(); renderQC(); renderLists(); renderStamp(); renderBoard(); renderHist(); }
 
 function renderStamp(){
   const last=repl.filter(r=>r.일자&&r.일자!=='None').map(r=>r.일자).sort().slice(-1)[0];
@@ -1013,6 +1034,13 @@ function renderKPI(){
    ['주의 등급',cnt('주의')+'대','중정비 시 우선 점검'],
    ['세션 신규 등록',repl.filter(r=>r.neu).length+'건','수선의뢰 화면에서 등록'],
   ].map(([x,y,z])=>`<div class="kpi"><span>${x}</span><b>${y}</b><small>${z}</small></div>`).join('');
+}
+function renderNavBadge(){
+  const urgent=allAssessed().filter(x=>x.상태==='운영중'&&x.g==='긴급').length;
+  const b=document.getElementById('navUrgentBadge');
+  if(!b)return;
+  if(urgent>0){b.textContent=urgent;b.style.display='inline-block';}
+  else{b.style.display='none';}
 }
 function renderExecutiveHero(){
   const a=allAssessed();
@@ -1368,6 +1396,7 @@ function renderSidePanel(serial){
   const isSpare=m.상태==='예비품';
   const favOn=favorites.includes(m.시리얼);
   const actions=getRecommendedActions(m);
+  const tr=isSpare?null:trendInfo(a.evs);
   p.innerHTML=`
    <div class="sp-head"><button class="sp-close noprint" onclick="resetQuickMode()" title="현황판으로 돌아가기">✕</button><div class="ser">${m.시리얼}</div>
      <div class="sub">${isSpare?'예비품 보관대':('편성 '+m.편성+' · '+a.loc)} — 제작 ${m.제작년도} ${m.제조사} · 사용 ${a.age!==null?a.age+'년':'미상'}</div></div>
@@ -1375,6 +1404,8 @@ function renderSidePanel(serial){
      <span class="badge b${isSpare?((m.비고||'').includes('불용')?'불용':'예비'):a.g}" style="font-size:13px;padding:6px 14px">${isSpare?((m.비고||'').includes('불용')?'불용대기':'예비품'):a.g}</span>
      <div class="big">${isSpare?'취부 전 상태 확인':gradeInfo[a.g].act}</div>
    </div>
+   ${tr&&tr.dir==='up'?`<div class="trend-chip trend-up">📈 최근 고장 빈도가 늘고 있습니다 (이전 ${tr.older}건 → 최근 ${tr.recent}건, 5년 구간 내 전·후반 비교)</div>`:''}
+   ${tr&&tr.dir==='down'?`<div class="trend-chip trend-down">📉 최근 고장 빈도가 줄고 있습니다 (이전 ${tr.older}건 → 최근 ${tr.recent}건, 5년 구간 내 전·후반 비교)</div>`:''}
    <div class="sp-body">
      <div class="smart-card">
        <div class="smart-hd">추천 액션</div>
