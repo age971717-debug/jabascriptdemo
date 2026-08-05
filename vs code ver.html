@@ -1229,11 +1229,7 @@ const SIDEPANEL_DEFAULT_HTML=`
 let quickMode='board';
 function renderQuickState(){
   const box=document.getElementById('quickState');
-  if(!box)return;
-  if(quickMode==='board'){box.style.display='none';return;}
-  const msg=quickMode==='urgent'?'우선 점검 모드':quickMode==='today'?'오늘 작업 모드':'예비품 체크 모드';
-  box.style.display='flex';
-  box.innerHTML=`<div class="qs-main"><b>${msg}</b><span>현재 화면에서 다른 항목을 선택해도 이 모드는 유지됩니다. 아래 버튼으로 바로 메인 현황판으로 돌아갈 수 있습니다.</span></div><button class="qa-btn primary" onclick="resetQuickMode()">🏠 현황판으로 돌아가기</button>`;
+  if(box)box.style.display='none';
 }
 function resetQuickMode(){
   quickMode='board';
