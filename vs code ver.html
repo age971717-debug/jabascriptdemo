@@ -117,7 +117,8 @@ textarea{resize:vertical;min-height:66px}
 .autobox.ok{border-color:#2c6e3c;background:#14231a;color:#a9dcb5}
 .autobox.bad{border-color:#6e2f2b;background:#241619;color:#ffb3ab}
 .kw{background:#4a3d10;color:#ffd94d;border-radius:2px;padding:0 4px}
-.toast{position:fixed;bottom:22px;right:22px;background:#14261a;color:#a9dcb5;border:1px solid #2c6e3c;padding:13px 18px;border-radius:8px;font-size:13.5px;box-shadow:0 6px 18px rgba(0,0,0,.5);opacity:0;transform:translateY(8px);transition:.25s;z-index:99;max-width:380px}
+.toast{position:fixed;bottom:22px;right:22px;background:#14261a;color:#a9dcb5;border:1px solid #2c6e3c;padding:13px 18px;border-radius:8px;font-size:13.5px;box-shadow:0 6px 18px rgba(0,0,0,.5);opacity:0;transform:translateY(8px);transition:.25s;z-index:99;max-width:380px;pointer-events:none}
+.toast.show{pointer-events:auto}
 .toast.show{opacity:1;transform:none}
 .mtx{border-collapse:collapse;font-size:11px}
 .mtx th,.mtx td{border:1px solid var(--line);text-align:center;padding:0}
@@ -1401,8 +1402,8 @@ function renderSidePanel(serial){
      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap" class="noprint">
        <button class="btn sec" style="flex:1;min-width:140px" onclick="gotoAsset('${m.시리얼}')">📄 리포트·인쇄</button>
        ${isSpare?'':`<button class="btn ghost" style="flex:1;min-width:140px" onclick="prefillWO('${m.시리얼}')">📝 수선의뢰 작성</button>`}
-       <button class="btn ghost" style="flex:1;min-width:140px" onclick="resetQuickMode()">🏠 목록으로 돌아가기</button>
      </div>
+     <button class="btn ghost noprint" style="width:100%;margin-top:8px" onclick="resetQuickMode()">🏠 목록으로 돌아가기</button>
    </div>`;
 }
 function nav2(page){
