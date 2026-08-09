@@ -271,6 +271,12 @@ textarea{resize:vertical;min-height:66px}
 .tl .d{font-family:var(--mono);font-size:11px;color:var(--ink2)}
 .tl .t{font-size:12px;margin-top:2px}
 .tl .t .chip{margin-right:5px}
+.hist-limit{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.hist-limit-sum{font-size:10.5px;color:var(--ink3)}
+.hist-limit-btns{display:flex;gap:4px}
+.hist-limit-btn{border:1px solid var(--line2);background:transparent;color:var(--ink2);font-size:10.5px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:inherit}
+.hist-limit-btn:hover{border-color:var(--ink3);color:var(--ink)}
+.hist-limit-btn.on{border-color:var(--accent);background:#4da3ff26;color:var(--accent2);font-weight:700}
 .filterbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
 .filterbar select,.filterbar input{width:auto;min-width:130px}
 /* ===== 이력 상세 모달 ===== */
@@ -1217,6 +1223,7 @@ function renderLists(){
 
 // ===== 취부 현황판 =====
 let selSerial=null;
+let historyLimit=10; // 사이드패널 이력 표시 개수 (10 | 20 | 'all')
 function cellClass(a){
   if(a.상태==='예비품') return (a.비고||'').includes('불용')||a.위치==='불용대기'?'c불용':'c예비';
   return 'c'+a.g;
@@ -1375,8 +1382,12 @@ function syncBoardGridScroll(){
 ['bfGrade','bfStatus'].forEach(id=>document.getElementById(id).addEventListener('change',renderBoard));
 document.getElementById('bfSearch').addEventListener('input',renderBoard);
 window.selectTM=function(serial){
-  selSerial=serial; addRecent(serial); setActiveAsset(serial); renderBoard(); renderSidePanel(serial);
+  selSerial=serial; historyLimit=10; addRecent(serial); setActiveAsset(serial); renderBoard(); renderSidePanel(serial);
   if(window.innerWidth<=1100)document.getElementById('sidePanel').scrollIntoView({behavior:'smooth',block:'start'});
+};
+window.setHistoryLimit=function(l){
+  historyLimit=l==='all'?'all':+l;
+  renderSidePanel(selSerial);
 };
 window.openQuickTask=function(type){
   const all=allAssessed();
@@ -1386,6 +1397,16 @@ window.openQuickTask=function(type){
   if(type==='spare')target=all.find(x=>x.상태==='예비품');
   if(target){quickMode=type; renderQuickState(); selectTM(target.시리얼);} else {toast('표시할 대상이 없습니다','warn');}
 };
+function historyLimitBar(total,shown){
+  const summary=historyLimit==='all'||shown>=total?`전체 ${total}건 모두 표시`:`전체 ${total}건 중 최근 ${shown}건 표시`;
+  const opts=[10,20,'all'];
+  return `<div class="hist-limit noprint">
+    <span class="hist-limit-sum">${summary}</span>
+    <div class="hist-limit-btns" role="group" aria-label="이력 표시 개수">
+      ${opts.map(o=>`<button type="button" class="hist-limit-btn${historyLimit===o?' on':''}" onclick="setHistoryLimit('${o}')">${o==='all'?'전체':o+'건'}</button>`).join('')}
+    </div>
+  </div>`;
+}
 function renderSidePanel(serial){
   const p=document.getElementById('sidePanel');
   const m=master.find(x=>x.시리얼===serial);
@@ -1423,7 +1444,8 @@ function renderSidePanel(serial){
        <div><span>산출 근거</span><b>자주 ${a.O}점 × 심함 ${a.S}점 = 위험 ${a.C}점</b></div>
      </div>
      <div class="sp-sec">고장·교체 이력 (${evs.length}건) — 사실 기록</div>
-     ${evs.length?'<ul class="tl">'+evs.map(e=>`<li style="--dot:${fcColor[e.고장코드]||'#66748a'};cursor:pointer" onclick="showEv('${e.id}')" title="눌러서 크게 보기">
+     ${evs.length?historyLimitBar(evs.length,Math.min(evs.length,historyLimit==='all'?evs.length:historyLimit)):''}
+     ${evs.length?'<ul class="tl">'+(historyLimit==='all'?evs:evs.slice(0,historyLimit)).map(e=>`<li style="--dot:${fcColor[e.고장코드]||'#66748a'};cursor:pointer" onclick="showEv('${e.id}')" title="눌러서 크게 보기">
        <div class="d">${e.일자} · ${dispId(e.id)}${e.neu?' <span class="badge bNew">NEW</span>':''}</div>
        <div class="t"><span class="chip" style="color:${fcColor[e.고장코드]};border-color:${fcColor[e.고장코드]}" title="${e.고장코드}">${fcName(e.고장코드)}</span>${e.세부내용||e.고장유형}${e.취거품상태?' → '+e.취거품상태:''}</div></li>`).join('')+'</ul>'
       :'<div class="empty" style="padding:10px 0">관측기간 내 취거 이력 없음<br><span style="font-size:11px">→ 발생도 최저(1) 적용 근거</span></div>'}
