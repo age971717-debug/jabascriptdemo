@@ -42,10 +42,30 @@ workspace `GS8VAndim2d3OBu4TcTX` = "권휘진's Lovable", free 플랜)에
 - 외부수선이력 — `external_repair_log` 테이블 신설(47건: 수선반출 35 + 불용 12),
   `/external-repair` 페이지 추가 완료. 검색/필터/예비품 연결배지까지 브라우저 테스트 검증.
 
-### 4. 남은 것
-- 구글시트/드라이브 연동 — 사용자가 커넥터 연결 시도 중이나 아직 Lovable 워크스페이스에
-  연결이 잡히지 않음(`list_custom_connectors` 결과 0건, 양쪽 워크스페이스 모두 확인함).
-  OAuth 마지막 단계(권한 허용) 완료 필요.
+### 4. 구글시트 연동 — 취소, 대체 방식으로 전환
+Google Sheets/Drive는 "App User 커넥터" 방식이라 워크스페이스 소유자가 먼저
+Google Cloud Console에서 OAuth 웹 클라이언트를 직접 발급받아 Lovable
+워크스페이스 설정(App User Connectors)에 등록해야 함 — 일반 사용자가 몇 번
+클릭으로 끝낼 수 있는 게 아니라 개발자 콘솔 작업이 필요함을 확인함
+(`standard_connectors--list_connections`, `connector_app_user--list_connectors`
+로 검증). 사용자가 "너무 복잡하면 사용자들이 쓰기 힘들다"고 판단, 취소.
+
+### 5. 대체 기능 — "엑셀로 내보내기" 버튼 (남은 것, 크레딧 필요)
+취부 현황판에 버튼 추가 → 클릭 시 tm_assets/repair_history/external_repair_log를
+각 시트로 나눈 .xlsx를 즉시 생성해 다운로드 ("TM현황_YYYYMMDD.xlsx", 한글 컬럼명,
+로그인 불필요). 요청 메시지는 보냈으나 크레딧 소진으로 전송 실패 — 재시도 필요.
+```
+구글시트 연동은 설정이 너무 복잡해서 취소할게. 대신 훨씬 간단한 기능을 만들어줘:
+
+**"엑셀로 내보내기" 버튼 추가**
+- 취부 현황판(메인 화면) 상단에 "📥 엑셀로 내보내기" 버튼 추가
+- 클릭하면 현재 시점의 tm_assets(마스터), repair_history(수선이력), external_repair_log(외부수선이력) 데이터를 각각 시트로 나눈 .xlsx 파일로 생성해서 바로 다운로드
+- 파일명은 "TM현황_YYYYMMDD.xlsx" 형식으로
+- 컬럼명은 한글로 (시리얼, 편성, 위치, 상태, 제작년도, 제조사, 비고, 교환일자 등 — DB 컬럼과 매칭되게)
+- 별도 로그인 없이 조회자도 다운로드 가능하게
+
+브라우저로 직접 버튼 눌러서 실제 파일이 다운로드되는지, 데이터가 맞는지 확인해줘.
+```
 
 ## 아직 미착수
 - 단일 HTML 파일의 로컬 파일연동 기능(`btnXlsxLink`)을 참고 자료로 남겨둠 —
