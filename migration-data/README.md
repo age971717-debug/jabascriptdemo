@@ -1090,7 +1090,8 @@ workspace `GS8VAndim2d3OBu4TcTX` = "권휘진's Lovable")에 원본 데이터를
   하고, 실제 데이터 화면은 배포 후 사용자 확인 필요.
 - Lovable 프로젝트 Knowledge "TM-CBM 프로젝트 기준"(10-16 설정)을 Claude 직접 작업에도 똑같이 적용.
 
-- **현장 의견 흐름 — Claude 직접 구현(tm-cbm commit `762915c`, Lovable 크레딧 0)**:
+- **현장 의견 흐름 — Claude 직접 구현·배포(tm-cbm commit `762915c`, Lovable 크레딧 0)**: Lovable
+  동기화 완료(developer_update completed) 후 `deploy_project`로 배포(deployment `1ad61738-d41c-47fb-b980-7f3130c80cdd`).
   - DB: `field_feedback` 표(Lovable `query_database`로 생성, 저장소에도
     `supabase/migrations/20261017020000_field_feedback.sql`로 기록). 누구나 작성하되 상태는 항상
     '접수'로만(작성자가 상태·메모 지정 불가), 조회는 공개 방침대로 누구나, 상태 변경·삭제는
@@ -1106,6 +1107,18 @@ workspace `GS8VAndim2d3OBu4TcTX` = "권휘진's Lovable")에 원본 데이터를
     현장 의견 탭 2건, 업데이트 내역, 가로 넘침 0, 화면 오류 0). 미확인: 실제 DB에 저장되는지(이
     세션에서 Supabase 차단 — 배포 후 사용자 확인 필요), 휴대폰에서 챗봇 버튼이 의견 카드의
     "상태 변경" 버튼 위에 겹칠 수 있음(스크롤하면 보임).
+
+- **상용화 수준 점검(2026-10-17, 실제 코드·DB 확인)**: 코드 약 1.9만 줄, 단위 테스트 74개 통과, 빌드
+  정상, DB 15MB, 표 17개 모두 RLS 켜짐·데이터 쓰기는 전부 admin(has_role)만(예외: field_feedback
+  쓰기·즐겨찾기 본인·감사기록 본인 — 의도된 것), auth 사용자 1명(공용 담당자 계정)·admin 1.
+  발견: ①챗봇 서버 함수 `askDocuments` 인증·호출 제한 없음(외부 반복 호출 시 Gemini 비용)
+  ②`/api/public/seed-rag` 공개 POST가 서비스 키로 동작(멱등이라 피해는 제한적이나 보호 필요)
+  ③담당자 공용 계정 1개·짧은 비밀번호(시험 기본값 4자리) → 개인 계정·역할 필요(사용자 결정)
+  ④공개 조회는 사내용으론 의도된 것이나 타 기관 판매 시 기관별 분리 필요(사용자 결정)
+  ⑤등급 계산(computeRisk) 단위 테스트 없음 ⑥오류 기록 없음 ⑦번들 dashboard 546KB·index 535KB
+  ⑧ESLint 2,940건(서식 2,907·hooks 의존성 14·react-refresh 17) ⑨큰 파일 chatbot.ts 1,712줄·
+  dashboard 1,239줄·ChatWidget 1,210줄 ⑩약한 전파 대비 없음. 3단계: 다기관 구조, 폐쇄망, 운영
+  문서·라이선스. 추천: ①②⑤ 먼저(크레딧 없이 가능) → ⑥⑦⑧ → ③④ 결정.
 
 ## 남은 것
 
