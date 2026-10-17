@@ -1072,6 +1072,24 @@ workspace `GS8VAndim2d3OBu4TcTX` = "권휘진's Lovable")에 원본 데이터를
   - 미확인: "반복 고장 위치 있어?" 답 내용(시험 스크립트 오독, 관련 코드 미변경),
     시험 브라우저 그림문자 글꼴 없음(아이콘 빈 네모, 실기기는 보통 정상).
 
+## 2026-10-17 작업 방식 변경 — Lovable 크레딧 없이 Claude가 직접 코딩
+
+- 배경: Lovable 크레딧이 하루 만에 소진(10-16 약 60, 10-17 약 5 쓰고 소진). 사용자 "러버블 크레딧
+  안 쓰고 너가 코딩으로 구현은 못 해?" → Lovable 프로젝트를 GitHub에 연결(사용자가 Lovable
+  편집기 GitHub → Sync my Code). 저장소: **`age971717-debug/tm-cbm`**(main, Lovable과 양방향 동기화,
+  첫 커밋 c3d9bed). 참고로 처음에 누른 "GitHub API 커넥터"는 Lovable AI용 조회 연결이라 코드
+  동기화가 아니었음.
+- 흐름: Claude가 이 세션에 `/home/user/tm-cbm` 복제 → 코드 직접 수정 → 타입체크·단위 테스트 →
+  `main`에 푸시 → Lovable이 자동 반영 → Claude가 Lovable `deploy_project`로 배포(크레딧 불필요,
+  10-17 실제로 사용해 봄). DB는 Lovable `query_database`로 직접(크레딧 소진 상태에서도 동작 확인).
+- 이 세션 환경 확인(10-17): `bun install`은 lockfile이 Lovable 전용 npm 미러를 가리켜 403 → 설치할
+  때만 공개 npm으로 바꿔 설치하고 파일은 원래대로 되돌림(xlsx는 SheetJS CDN이 막혀 로컬
+  확인용으로만 npm 0.18.5 설치, 저장소의 package.json·bun.lock은 그대로). 타입체크 통과, 단위
+  테스트 65/65 통과. **Supabase(birhkgavvnrolzihcmwk.supabase.co)와 실제 사이트는 이 세션
+  네트워크 정책으로 차단** → 화면 확인은 로컬 개발 서버 + 가짜 데이터(Playwright 가로채기)로
+  하고, 실제 데이터 화면은 배포 후 사용자 확인 필요.
+- Lovable 프로젝트 Knowledge "TM-CBM 프로젝트 기준"(10-16 설정)을 Claude 직접 작업에도 똑같이 적용.
+
 ## 남은 것
 
 - **TM 리포트 자동완성 버그 + 대시보드 현황 탭 시각화 — 완료·배포(commit
