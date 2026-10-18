@@ -1,0 +1,578 @@
+[
+ {
+  "id": 324,
+  "repair_date": "2023-07-21",
+  "removed_serial": "89TWDH041",
+  "detail": "보극선 코일단락(절연저항 0), 전기자상태양호",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 326,
+  "repair_date": "2023-09-25",
+  "removed_serial": "94TWDH009",
+  "detail": "2,4위 브러쉬홀더 절손 및 용융 LH(+)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 327,
+  "repair_date": "2023-09-26",
+  "removed_serial": "296636-18",
+  "detail": "2위 브러쉬 마모한도 도달, 계자 보극선 손상",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC01",
+   "fault_type": "정류자·브러쉬 경미 이상",
+   "severity": 3,
+   "risk_score": 30
+  }
+ },
+ {
+  "id": 328,
+  "repair_date": "2023-10-23",
+  "removed_serial": "88091-55",
+  "detail": "1,3위 브러쉬홀더 절손 및 용융 RH(-)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 332,
+  "repair_date": "2023-12-26",
+  "removed_serial": "297309-1",
+  "detail": "2,4위 브러쉬홀더 절손 및 용융 LH(+), 계자 및 전기자 단락",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 333,
+  "repair_date": "2023-12-27",
+  "removed_serial": "88TWDH121",
+  "detail": "2위 브러쉬홀더 절손 및 용융 LH(+), 계자 전기자 양호",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 334,
+  "repair_date": "2024-01-26",
+  "removed_serial": "88091-68",
+  "detail": "2,4위 브러쉬홀더 절손 및 용융 LH(+)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 335,
+  "repair_date": "2024-02-06",
+  "removed_serial": "96TWDH247",
+  "detail": "1,3위 브러쉬홀더 절손 및 용융 RH(-)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 296,
+  "repair_date": "2022-11-18",
+  "removed_serial": "296633-9",
+  "detail": "브러쉬홀더 절손(상부 좌측)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 298,
+  "repair_date": "2022-11-21",
+  "removed_serial": "96TWDH245",
+  "detail": "브러쉬홀더 절손 및 용융 RH(-)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 300,
+  "repair_date": "2022-12-07",
+  "removed_serial": "296632-1",
+  "detail": "브러쉬홀더 절손 및 용융 LH(+)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 301,
+  "repair_date": "2022-12-15",
+  "removed_serial": "862214-5",
+  "detail": "파워시험 시 1호차 TM F/O",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC05",
+   "fault_type": "절연파괴·소손·F/O",
+   "severity": 7,
+   "risk_score": 70
+  }
+ },
+ {
+  "id": 302,
+  "repair_date": "2022-12-15",
+  "removed_serial": "93TWDH150",
+  "detail": "파워시험 시 1호차 TM F/O",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC05",
+   "fault_type": "절연파괴·소손·F/O",
+   "severity": 7,
+   "risk_score": 70
+  }
+ },
+ {
+  "id": 303,
+  "repair_date": "2022-12-15",
+  "removed_serial": "296638-10",
+  "detail": "파워시험 시 1호차 TM F/O",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC05",
+   "fault_type": "절연파괴·소손·F/O",
+   "severity": 7,
+   "risk_score": 70
+  }
+ },
+ {
+  "id": 305,
+  "repair_date": "2022-12-31",
+  "removed_serial": "297309-3",
+  "detail": "정류자면 전마모, 브러쉬홀더 파손",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC01",
+   "fault_type": "정류자·브러쉬 경미 이상",
+   "severity": 3,
+   "risk_score": 30
+  }
+ },
+ {
+  "id": 306,
+  "repair_date": "2023-01-11",
+  "removed_serial": "95111-04",
+  "detail": "계자 보극선 코일단락",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 308,
+  "repair_date": "2023-01-14",
+  "removed_serial": "98TWDH393",
+  "detail": "2,4위 브러쉬홀더 절손 및 용융 LH(+)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 309,
+  "repair_date": "2023-02-04",
+  "removed_serial": "96TWDH241",
+  "detail": "2,4위 브러쉬홀더 절손 및 용융 LH(+)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 310,
+  "repair_date": "2023-02-21",
+  "removed_serial": "88091-73",
+  "detail": "1,3위 브러쉬홀더 절손 및 용융 RH(-)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 313,
+  "repair_date": "2023-03-24",
+  "removed_serial": "88TWDH125",
+  "detail": "회전자 정류자면 전식(플래시 오버)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC05",
+   "fault_type": "절연파괴·소손·F/O",
+   "severity": 7,
+   "risk_score": 70
+  }
+ },
+ {
+  "id": 314,
+  "repair_date": "2023-04-19",
+  "removed_serial": "64052",
+  "detail": "1,3위 브러쉬홀더 절손 및 용융 RH(-)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 315,
+  "repair_date": "2023-05-30",
+  "removed_serial": "88091-66",
+  "detail": "2,4위 브러쉬홀더 절손 및 용융 LH(+)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 320,
+  "repair_date": "2023-06-05",
+  "removed_serial": "92TWDH071",
+  "detail": "2,4위 브러쉬홀더 절손 및 용융 LH(+)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 323,
+  "repair_date": "2023-07-11",
+  "removed_serial": "88091-78",
+  "detail": "1,3위 브러쉬홀더 절손 및 용융 RH(-)",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 350,
+  "repair_date": "2025-01-15",
+  "removed_serial": "89TWDH061",
+  "detail": "브러쉬홀더 절손",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 351,
+  "repair_date": "2025-01-22",
+  "removed_serial": "296635-17",
+  "detail": "브러쉬홀더 절손",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 352,
+  "repair_date": "2025-02-21",
+  "removed_serial": "88091-66",
+  "detail": "브러쉬홀더 절손",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 353,
+  "repair_date": "2025-02-21",
+  "removed_serial": "88091-50",
+  "detail": "브러쉬홀더 절손",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 354,
+  "repair_date": "2025-02-21",
+  "removed_serial": "88TWDH106",
+  "detail": "브러쉬홀더 절손",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 355,
+  "repair_date": "2025-02-21",
+  "removed_serial": "296637-4",
+  "detail": "브러쉬홀더 절손",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC03",
+   "fault_type": "브러쉬홀더 열화·계자코일 단락",
+   "severity": 5,
+   "risk_score": 50
+  }
+ },
+ {
+  "id": 358,
+  "repair_date": "2025-05-09",
+  "removed_serial": "92TWDH061",
+  "detail": "정류자면 아크발생",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC05",
+   "fault_type": "절연파괴·소손·F/O",
+   "severity": 7,
+   "risk_score": 70
+  }
+ },
+ {
+  "id": 360,
+  "repair_date": "2025-06-17",
+  "removed_serial": "94TWDH005",
+  "detail": "브러쉬홀더 접지, F/O",
+  "before": {
+   "fault_code": "FC99",
+   "fault_type": "기타",
+   "severity": 2,
+   "risk_score": 5
+  },
+  "after": {
+   "fault_code": "FC05",
+   "fault_type": "절연파괴·소손·F/O",
+   "severity": 7,
+   "risk_score": 70
+  }
+ }
+]
