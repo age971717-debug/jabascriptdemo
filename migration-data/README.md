@@ -1161,7 +1161,26 @@ workspace `GS8VAndim2d3OBu4TcTX` = "권휘진's Lovable")에 원본 데이터를
   반영, 추세, 고장 자동 분류) + `data-quality.test.ts` 2건. computeRisk 계산은 바꾸지 않음(시험만).
 - 확인: 타입체크·ESLint 통과, 단위 테스트 90/90, 로컬 개발 서버 + 가짜 데이터(171대) 390px·1280px 스크린샷
   (두 도넛, 데이터 점검 새 항목). 업데이트 내역 2026-10-18 추가.
-- 다음: 상용화 ①(챗봇 호출 제한)·②(seed-rag 보호) 진행 예정.
+- 배포: Lovable 동기화 완료 후 `deploy_project`(deployment `b43224fb-4839-4cc2-b8a9-164540160e5b`).
+
+- **상용화 ①② 보안 — tm-cbm commit `43de9ec`**:
+  - ① 챗봇 문서 검색 `askDocuments` 하루 사용량 한도: 전체 1,500회/일, 네트워크(IP)당 300회/일(한국 시간
+    자정 기준). 사내 여러 명이 같은 회사 IP로 나갈 수 있어 IP 한도는 넉넉히, 비용은 전체 한도로 막음(질문 1회
+    AI 호출 1~2번). DB: `rag_usage`(day, client, count; RLS 켜고 정책 없음 = 서버만) + `rag_take_quota`
+    (security definer, anon·authenticated 실행 권한 없음, service_role만, 30일 지난 행 자동 삭제). client는
+    IP의 SHA-256 앞 16자 — 원래 IP는 저장 안 함. 넘으면 "오늘 문서 검색 사용량이 한도…'문서' 화면에서 직접"
+    안내, 한도 확인 자체가 실패하면 챗봇은 막지 않음(현장 우선, 서버 로그만). Lovable `query_database`로 생성 +
+    `supabase/migrations/20261018010000_rag_usage_quota.sql`. 실제 DB에서 시험(되돌림 처리 DO 블록):
+    ok → client 한도 → ok → day 한도 순서대로 나옴, anon 실행 권한 false, 시험 후 표 0행.
+  - ② `/api/public/seed-rag`: 환경 변수 `SEED_RAG_TOKEN`과 같은 `x-seed-token` 헤더가 있어야만 실행,
+    환경 변수가 없으면 항상 403(지금 상태 = 꺼짐). 문서 청크 185개는 이미 다 들어가 있어 지금 쓸 일 없음.
+    다시 시드가 필요하면 Lovable 프로젝트 비밀값에 SEED_RAG_TOKEN을 넣고 그 값으로 호출.
+  - 확인: 타입체크·ESLint 통과, 단위 테스트 90/90, 프로덕션 빌드 정상, 한도 코드는 서버 번들에만 있음
+    (`.output/server/_ssr/rag.functions-*.mjs`). 미확인: 배포된 사이트에서 실제 IP 헤더(cf-connecting-ip)가
+    잡히는지 — 이 세션에서 사이트 접속 차단. 헤더가 없으면 모두 "unknown" 한 묶음이 되어 IP당 300회가 사실상
+    전체 한도가 됨(챗봇이 멈추지는 않고 300회 이후 안내). 배포 후 `select * from rag_usage`로 client가 여러 개
+    생기는지 확인할 것.
+- 남은 상용화 항목: ③개인 계정(사용자 결정) ④기관별 분리(사용자 결정) ⑥오류 기록 ⑨큰 파일 분리 ⑩약한 전파.
 
 ## 남은 것
 
