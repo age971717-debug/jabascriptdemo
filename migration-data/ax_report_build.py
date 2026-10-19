@@ -1,4 +1,5 @@
-"""AX 과제 결과보고 v8 — 중대재해 표현 빼고 AX 리더 과제(AI로 일하는 방식 전환) 관점으로.
+"""AX 과제 결과보고 v9 — 화면을 한곳에 모으지 않고 해당 설명 바로 밑에 3장씩(설명 ⇒ 화면).
+v8 — 중대재해 표현 빼고 AX 리더 과제(AI로 일하는 방식 전환) 관점으로.
 v7 — 그림 대신 한글 표(양식 표 서식: 머리행 음영·이중선·양옆 트임)로 현황·판정표·절차·전후 비교를 직접 짠 모양.
 숫자는 '26.10.19 DB 값, 판정표 색은 앱 tm.ts MATRIX 그대로. 사용: build7.py 양식 출력 화면폴더 캡처폴더 [사진폭mm]"""
 import copy, io, re, sys, zipfile, shutil
@@ -7,7 +8,7 @@ from PIL import Image
 from hwpx import HwpxDocument
 
 FORM, OUT, IMG, CAP = sys.argv[1:5]
-PHOTO_W = float(sys.argv[5]) if len(sys.argv) > 5 else 30
+PHOTO_H = float(sys.argv[5]) if len(sys.argv) > 5 else 42
 HP = "http://www.hancom.co.kr/hwpml/2011/paragraph"
 q = lambda t: f"{{{HP}}}{t}"
 MM = 7200 / 25.4
@@ -61,6 +62,8 @@ BIG_R = CS(size=13, font="HY헤드라인M", color="#C00000")
 BIG_N = CS(size=13, font="HY헤드라인M", color="#1F3864")
 SUB9 = CS(size=9.5, font="휴먼명조")
 PHC = CS(size=9, font="한컴돋움", bold=True)
+NOTE = CS(size=10, font="휴먼명조")
+NOTEB = CS(size=10, font="한컴돋움", bold=True)
 SUB9B = CS(size=9.5, font="한컴돋움", bold=True)
 
 _PP = {}
@@ -155,6 +158,42 @@ def photo_grid(rows, img_w_mm, cap_shade="#DFE6F7"):
             q2.para_pr_id_ref = pc; q2.add_run(cap, char_pr_id_ref=PHC)
             t.set_cell_shading(2 * r + 1, c, cap_shade)
 
+
+def photo_row(items, h_mm, notes=None):
+    """한 줄 사진표: 같은 높이로 맞추고 사진마다 설명 칸. items: (path, box, caption)."""
+    ims = []
+    for path, box, cap in items:
+        im = Image.open(path).convert("RGB")
+        if box: im = im.crop(box)
+        ims.append((im, cap))
+    wmm = [h_mm * im.size[0] / im.size[1] for im, _ in ims]
+    total = sum(w + 4 for w in wmm)
+    ncol = len(ims) + (1 if notes else 0)
+    widths = [w + 4 for w in wmm] + ([165 - total] if notes else [])
+    t = doc.add_table(rows=2, cols=ncol, width=round((165 if notes else min(165, total)) * MM))
+    t.set_column_widths(widths)
+    pc = ppid(alignment="CENTER", line_spacing_percent=100)
+    for c, ((im, cap), w) in enumerate(zip(ims, wmm)):
+        b = io.BytesIO(); im.save(b, "PNG", optimize=True)
+        item = doc.add_image(b.getvalue(), "png")
+        p = t.cell(0, c).paragraphs[0]
+        for run in list(p.runs): run.remove()
+        p.para_pr_id_ref = pc; p.add_picture(item, width=round(w * MM), height=round(h_mm * MM), treat_as_char=True)
+        q2 = t.cell(1, c).paragraphs[0]
+        for run in list(q2.runs): run.remove()
+        q2.para_pr_id_ref = pc; q2.add_run(cap, char_pr_id_ref=PHC)
+        t.set_cell_shading(1, c, "#DFE6F7")
+    if notes:
+        k = len(ims); t.merge_cells(0, k, 1, k)
+        cell = t.cell(0, k); pl = ppid(alignment="LEFT", line_spacing_percent=150)
+        first = True
+        for i, line in enumerate(notes):
+            p = cell.paragraphs[0] if first else cell.add_paragraph("")
+            for run in list(p.runs): run.remove()
+            p.para_pr_id_ref = pl
+            rich(p, line, NOTE, NOTEB) if i else p.add_run(line, char_pr_id_ref=NOTEB)
+            first = False
+    doc.add_paragraph("", char_pr_id_ref=PHC); doc.set_paragraph_format(paragraph_index=len(doc.paragraphs) - 1, line_spacing_percent=60)
 P_C = "30"
 P_L = ppid(alignment="LEFT", line_spacing_percent=130)
 P_C = ppid(alignment="CENTER", line_spacing_percent=130)
@@ -217,20 +256,24 @@ for i, sv in enumerate(SV):
                 [dict(GAP), {"t": g, "cs": H10, "fill": COL[g], "b": {"l": NON}}, {"t": n, "cs": T10B},
                  {"t": todo, "align": "L"}])
 ntable(rows, [24, 10, 10, 10, 10, 10, 2, 11, 12, 36])
+photo_row([(f"{IMG}/r_board.png", PH, "① 취부 현황판"), (f"{IMG}/m_detail.png", PH, "② 산출 근거"),
+           (f"{IMG}/r_repair.png", PH, "③ 자동 분류")], PHOTO_H, notes=[
+    "[ 현장 화면으로 보는 위험도 판정 ]",
+    "① 편성·위치별 TM을 **등급 색**으로 표시, 긴급·주의만 골라 보기",
+    "② TM을 누르면 **발생도·심각도 점수와 산출 근거** 표시",
+    "③ 고장 내용을 입력하면 **고장코드 자동 분류**, 관련 수선 절차 쪽수 안내"])
 O("(AI 어시스턴트) 검색증강생성(RAG) 기반 문서 검색·데이터 분석·수선의뢰 등록")
 D("정비문서 187쪽 검색, 답변마다 **근거 문서·쪽수 표시** ⇒ 임의 생성 방지, 답변 신뢰성 확보")
 D("대화·**음성**만으로 수선의뢰 등록, 고장코드 자동 분류(카카오톡 화면에서도 동작)")
+photo_row([(f"{CAP}/mic_repair_on.png", (0, 448, 780, 1688), "① 음성 입력"), (f"{IMG}/r_chat.png", (0, 360, 780, 1600), "② AI 답변"),
+           (f"{IMG}/m_chat.png", PH, "③ 문서 검색")], PHOTO_H, notes=[
+    "[ AI 어시스턴트 활용 ]",
+    "① 마이크를 누르고 말하면 **글자로 입력**, 앱 안 화면은 녹음 후 AI가 받아쓰기",
+    "② “오늘 뭐부터 점검해야 돼?” 질문에 **긴급 TM과 이유** 답변",
+    "③ 정비 기준 질문 예시 제공, 문서에 없는 내용은 **답하지 않음**"])
 O("(분석·리포트) 고장 통계 현황판, 전동기별 리포트(PDF·한글·워드)·QR 라벨")
-caption("【 시스템 주요 화면 】")
-photo_grid([
-    [(f"{IMG}/r_board.png", PH, "취부 현황판"), (f"{IMG}/m_detail.png", PH, "위험도 산출 근거"),
-     (f"{IMG}/m_report.png", PH, "이력 리포트·QR"), (f"{IMG}/r_repair.png", PH, "고장코드 자동 분류")],
-    [(f"{CAP}/mic_repair_on.png", (0, 448, 780, 1688), "음성 입력"), (f"{IMG}/r_chat.png", (0, 360, 780, 1600), "AI 어시스턴트 답변"),
-     (f"{IMG}/m_chat.png", PH, "정비문서 검색"), (f"{IMG}/m_feedback.png", PH, "현장 의견 접수")],
-], PHOTO_W)
-photo_grid([
-    [(f"{IMG}/pc_dash.png", None, "대시보드(PC)"), (f"{IMG}/pc_grade.png", None, "등급 판정 기준(PC)")],
-], PHOTO_W)
+photo_row([(f"{IMG}/m_report.png", PH, "① 리포트·QR"), (f"{IMG}/pc_dash.png", None, "② 대시보드 현황(PC)"),
+           (f"{IMG}/pc_analysis.png", None, "③ 고장 통계 분석(PC)")], PHOTO_H)
 caption("【 추진 전·후 비교 】")
 ntable([
     ["구 분", "추진 전", "추진 후", "효 과"],
