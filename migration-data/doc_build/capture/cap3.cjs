@@ -1,0 +1,23 @@
+const { chromium } = require('/home/user/tm-cbm/node_modules/playwright');
+const fs = require('fs');
+const OUT = __dirname + '/img', U = 'http://127.0.0.1:8080';
+const D = JSON.parse(fs.readFileSync(__dirname + '/../realdata.json', 'utf8'));
+const X = JSON.parse(fs.readFileSync(__dirname + '/../extra.json', 'utf8'));
+const map = { tm_assets: D.assets, repair_history: D.history, external_repair_log: D.ext, risk_settings: D.risk, ...X };
+const route = (ctx) => ctx.route(/supabase\.co\//, (r) => { const m = r.request().url().match(/rest\/v1\/([a-z_]+)/);
+  if (r.request().method() !== 'GET' && m && m[1] !== 'rpc') return r.fulfill({ status: 403, json: {} });
+  return r.fulfill({ json: m ? (map[m[1]] ?? []) : {} }); });
+const hideFloating = (pg) => pg.evaluate(() => { for (const el of document.querySelectorAll('body *')) { const cs = getComputedStyle(el); if (cs.position === 'fixed' && el.getBoundingClientRect().top > 500) el.style.visibility = 'hidden'; } });
+(async () => {
+  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+  const m = await b.newContext({ viewport: { width: 390, height: 760 }, isMobile: true, hasTouch: true, colorScheme: 'dark', deviceScaleFactor: 2 });
+  await route(m); const p = await m.newPage();
+  await p.goto(U + '/'); await p.evaluate(() => localStorage.setItem('tm-site-gate', 'granted'));
+  await p.goto(U + '/repair'); await p.waitForTimeout(4500);
+  await p.locator('#repair-detail').fill('주행 중 2,4위 브러쉬홀더 절손 및 용융'); await p.waitForTimeout(1500);
+  await hideFloating(p); await p.screenshot({ path: `${OUT}/m_repair.png`, fullPage: true });
+  await p.goto(U + '/asset-report?serial=88091-48'); await p.waitForTimeout(5000);
+  for (let i = 0; i < 8; i++) { await p.mouse.wheel(0, 600); await p.waitForTimeout(250); } await p.evaluate(() => window.scrollTo(0, 0)); await p.waitForTimeout(1200);
+  await hideFloating(p); await p.screenshot({ path: `${OUT}/m_report.png`, fullPage: true });
+  console.log('ok'); await b.close();
+})();
