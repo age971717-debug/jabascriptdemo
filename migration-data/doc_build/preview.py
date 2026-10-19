@@ -58,4 +58,4 @@ pg = sec.find(".//hp:pagePr", NS); m = pg.find("hp:margin", NS)
 mm = lambda v: int(v) / 283.46
 body = "".join(para_html(p) for p in sec.findall("hp:p", NS))
 open(out, "w").write(f'''<html><head><meta charset="utf-8"><style>@page{{size:A4;margin:{mm(m.get("top"))}mm {mm(m.get("right"))}mm {mm(m.get("bottom"))}mm {mm(m.get("left"))}mm}}
-body{{margin:0;font-family:"Noto Sans CJK KR","WenQuanYi Zen Hei",sans-serif}}</style></head><body>{body}</body></html>''')
+body{{margin:0;font-family:"Noto Sans CJK KR","WenQuanYi Zen Hei",sans-serif;letter-spacing:{__import__("os").environ.get("LSP","0")}em;word-spacing:{__import__("os").environ.get("WSP","0")}em}}</style></head><body>{body}</body></html>''')
