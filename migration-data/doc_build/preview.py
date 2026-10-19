@@ -51,9 +51,10 @@ def tbl_html(t):
             bg = bf.get(tc.get("borderFillIDRef"))
             inner = "".join(para_html(p) for p in tc.find("hp:subList", NS).findall("hp:p", NS))
             cells.append(f'<td colspan="{sp.get("colSpan")}" rowspan="{sp.get("rowSpan")}" style="width:{int(sz.get("width"))/283.46:.1f}mm;{"background:"+bg+";" if bg and bg!="none" else ""}border:1px solid #444;padding:0.5mm 1.8mm;vertical-align:middle">{inner}</td>')
-        rows.append("<tr>" + "".join(cells) + "</tr>")
+        rows.append("<tr style=\"break-inside:avoid\">" + "".join(cells) + "</tr>")
     w = int(t.find("hp:sz", NS).get("width")) / 283.46
-    return f'<table style="border-collapse:collapse;width:{w:.1f}mm;table-layout:fixed;break-inside:avoid">{"".join(rows)}</table>'
+    inline = t.find("hp:pos", NS).get("treatAsChar") != "0"
+    return f'<table style="border-collapse:collapse;width:{w:.1f}mm;table-layout:fixed;{"break-inside:avoid" if inline else ""}">{"".join(rows)}</table>'
 pg = sec.find(".//hp:pagePr", NS); m = pg.find("hp:margin", NS)
 mm = lambda v: int(v) / 283.46
 body = "".join(para_html(p) for p in sec.findall("hp:p", NS))
