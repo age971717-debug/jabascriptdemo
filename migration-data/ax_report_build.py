@@ -1,4 +1,5 @@
-"""AX 과제 결과보고 v13 — 시스템 구성도·설계 원칙 표 삭제, 핵심 두 가지만 문장으로, 사진 확대.
+"""AX 과제 결과보고 v14 — 양식 안내(추진목적·개선점 / 개발 내용·결과물 형태) 그대로, As-Is/To-Be 사진 행, 사용연수·교체 이력 구분.
+v13 — 시스템 구성도·설계 원칙 표 삭제, 핵심 두 가지만 문장으로, 사진 확대.
 v12 — 표는 줄이고(As-Is 6행·설계 원칙 한 줄씩) 사진은 키움, 요약 상자에서 기타 비율 뺌.
 v11 — 성과 요약 상자, 시스템 구성도, AX 설계 원칙 6가지(모두 한글 표).
 v10 — 업무별 As-Is/To-Be(구현 기능·성과) 표를 추진성과 맨 앞에.
@@ -13,6 +14,7 @@ from hwpx import HwpxDocument
 
 FORM, OUT, IMG, CAP = sys.argv[1:5]
 PHOTO_H = float(sys.argv[5]) if len(sys.argv) > 5 else 42
+PHOTO_H2 = float(sys.argv[6]) if len(sys.argv) > 6 else 40
 HP = "http://www.hancom.co.kr/hwpml/2011/paragraph"
 q = lambda t: f"{{{HP}}}{t}"
 MM = 7200 / 25.4
@@ -105,6 +107,17 @@ def bf_xml(rid, key):
             f'<hh:diagonal type="SOLID" width="0.1 mm" color="#000000"/>{brush}</hh:borderFill>')
 
 HEAD_FILL = "#DFE6F7"
+def pic_run(path, box, w_mm):
+    """그림 한 장을 담은 run(표 칸에 넣기용)."""
+    im = Image.open(path).convert("RGB")
+    if box: im = im.crop(box)
+    b = io.BytesIO(); im.save(b, "PNG", optimize=True)
+    item = doc.add_image(b.getvalue(), "png"); w, h = im.size
+    tp = doc.add_paragraph("", include_run=False)
+    tp.add_picture(item, width=round(w_mm * MM), height=round(w_mm * MM * h / w), treat_as_char=True)
+    run = next(r for r in tp.element.findall(q("run")) if r.find(f".//{q('pic')}") is not None)
+    run = copy.deepcopy(run); tp.remove()
+    return run
 def ntable(rows, widths, total_mm=165, head_rows=1, split=False):
     """양식 표를 본떠 만든 표. 셀: str | dict(t=str|[(text, cs, align)], cs, fill, align, b=dict(l,r,t,b), span=n)."""
     el = copy.deepcopy(TBL); tbl = el.find(f".//{q('tbl')}")
@@ -132,6 +145,11 @@ def ntable(rows, widths, total_mm=165, head_rows=1, split=False):
             tc.set("borderFillIDRef", bf(left, right, top, bottom, fill))
             sub = tc.find(q("subList")); p_t = sub.find(q("p"))
             for p in sub.findall(q("p")): sub.remove(p)
+            if "pic" in spec:
+                p = copy.deepcopy(p_t); p.set("paraPrIDRef", P_C)
+                for run in p.findall(q("run")): p.remove(run)
+                for ls in p.findall(q("linesegarray")): p.remove(ls)
+                p.append(pic_run(*spec["pic"])); sub.append(p); c += span; continue
             lines = spec["t"] if isinstance(spec["t"], list) else [(spec["t"], spec.get("cs", "18" if is_head else "19"), spec.get("align", "C"))]
             for text, cs, al in lines:
                 p = copy.deepcopy(p_t); p.set("paraPrIDRef", P_C if al == "C" else P_L)
@@ -219,36 +237,30 @@ P_C = ppid(alignment="CENTER", line_spacing_percent=130)
 NB = {"l": NON, "r": NON, "t": NON, "b": NON}
 BX = {"l": THK, "r": THK, "t": THK, "b": THK}
 RED, ORG, YEL, GRN = "#F4B6B6", "#F8CBAD", "#FFE699", "#C6E0B4"   # 인쇄용 연한 등급 색
-# ================= 본문 =================
+# ================= 본문 (양식 안내 문구대로) =================
+def tb(text): return {"t": [(text, T95, "L")]}
 append(copy.deepcopy(SPACER))
 doc.add_paragraph("- AI가 진단하고 답하는 견인전동기 통합관리 시스템 -", char_pr_id_ref="16"); center_last(spacing_after_pt=2)
-ntable([
-    ["TM 전수 자동 판정", "정비문서 AI 검색", "현장 의견 반영", "외부 개발 용역비"],
-    [{"t": "144대", "cs": KPI_R}, {"t": "187쪽", "cs": KPI_N}, {"t": "13건", "cs": KPI_N}, {"t": "0원", "cs": KPI_R}],
-    [{"t": "긴급 2·주의 31대 선별", "cs": T95}, {"t": "답변마다 근거 쪽수", "cs": T95}, {"t": "쓰면서 바로 고침", "cs": T95}, {"t": "소요예산 70천원", "cs": T95}],
-], [25, 25, 25, 25])
 
 append(H1)
-O("(노후화) 운영 견인전동기의 96%가 사용 30년 이상, 노후화에 따른 고장 교체 지속")
-D("운영 144대 중 **139대가 사용 30년 이상**, 평균 39년·최장 53년('73년 제작) 경과")
-D("'26.3.23. 소사역 견인전동기 아크·연기 발생 ⇒ **승객하차·운행 중단**, 고장 징후 사전 식별 필요")
-D("교체 123건 중 **106건(86%)이 고장 발생 후 교체** ⇒ 사후 대응 구조 고착")
-caption("【 운영 견인전동기 사용연수 분포('26.10월 기준) 】")
+O("추진목적 : 노후 견인전동기의 고장 징후를 데이터로 선제 식별하는 상태기반정비(CBM) 체계 구축")
+D("(노후화) 운영 144대 중 **139대(96%)가 사용 30년 이상**, 평균 39년·최장 53년('73년 제작)")
+D("(사후 대응) 교체 123건 중 **106건(86%)이 고장 발생 후 교체**, '26.3.23. 소사역 아크·연기로 승객하차·운행 중단")
+D("(수작업) 취부현황·교체이력 Excel 분산 기록, 정비문서 4종 187쪽 수작업 검색, 고장분류 기준 제각각('기타' 37.4%)")
+caption("【 운영 견인전동기 사용연수(144대) 및 교체 이력(123건) 】")
+GAPC = {"t": "", "b": {"l": NON, "r": NON, "t": NON, "b": NON}, "fill": None}
 ntable([
-    ["사용연수", "30년 미만", "30~39년", "40~49년", "50년 이상", "계"],
-    ["운영 대수", "5대(3.5%)", "98대(68.1%)", "9대(6.3%)", {"t": "32대(22.2%)", "cs": T10B}, "144대"],
-], [16, 16, 18, 16, 19, 15])
-O("(관리) 이력 기록부터 문서 검색, 수선의뢰, 고장분류까지 수작업 처리")
-D("취부현황·교체이력을 Excel에 일일이 기록·취합 ⇒ 편성·차호별 추적 및 통계 활용 한계")
-D("정비문서 4종 187쪽을 매번 직접 확인, 분류 기준이 사람마다 달라 **'기타' 고장분류 37.4%**")
-O("(목적) 현업 담당자가 생성형 AI로 직접 만드는 상태기반정비(CBM) 체계, 업무 방식 전환(AX)")
-D("담당자 경험에 의존하던 판단을 **데이터 기반으로 전환**, 고장 징후 전동기 선제 식별")
-D("기록·검색·분류·판정의 반복 수작업을 **AI와 자동화로 대체**, 담당자는 판단·조치에 집중")
-
-append(copy.deepcopy(SPACER)); append(H2)
-caption("【 As-Is / To-Be : 업무별 구현 기능 】")
-def tb(text): return {"t": [(text, T95, "L")]}
-def ok(text): return {"t": text, "cs": T95B}
+    ["사용연수", "30년 미만", "30~39년", "40~49년", "50년 이상", GAPC, {"t": "교체 구분", "b": {"l": NON}}, "건 수"],
+    ["운영 대수", "5대", "98대", "9대", {"t": "32대", "cs": T10B}, GAPC, {"t": "고장 후 교체", "b": {"l": NON}}, {"t": "106건(86%)", "cs": T10B}],
+    ["비 율", "3.5%", "68.1%", "6.3%", "22.2%", GAPC, {"t": "정기·순환 교체", "b": {"l": NON}}, "17건(14%)"],
+], [13, 11, 11, 11, 12, 2, 16, 14])
+O("개선점 : 현업 담당자가 생성형 AI로 직접 개발, 기록·판단·검색을 하나의 시스템으로 전환(AX)")
+caption("【 As-Is / To-Be 】")
+ntable([
+    ["As-Is : 취부현황·교체이력 엑셀 분산 관리", "To-Be : TM-CBM 취부현황판(등급 색·즉시 갱신)"],
+    [{"t": [("[ 기존 엑셀 관리 시트 그림 ]", H10, "C"), ("원본 문서의 그림을 붙여 넣으세요", T95, "C")], "fill": "#F2F2F2"},
+     {"pic": (f"{IMG}/pc_board.png", None, 72)}],
+], [50, 50])
 ntable([
     ["업 무", "As-Is", "To-Be (구현 기능)", "성 과"],
     ["현황 파악", "엑셀 시트 열어 검색", tb("취부 현황판(등급 색·시리얼 검색), 대시보드 위젯 19종"), tb("171대 한 화면")],
@@ -258,19 +270,18 @@ ntable([
     ["보고·공유", "수작업 집계·작성", tb("TM 리포트 PDF·한글·워드, QR 라벨 일괄 인쇄, 엑셀 내보내기"), tb("즉시 발행")],
     ["관리·확장", "확인 수단 없음", tb("데이터 8항목 자동 점검, 변경 이력·백업, 장치 확장 템플릿"), tb("오류 5건 정리")],
 ], [12, 18, 52, 18], split=True)
-O("(플랫폼) 생성형 AI로 자체 개발, 시리얼 기준 이력을 단일 DB로 통합")
-D("'26.8월 착수, 휴대폰·PC 웹 브라우저로 **설치 없이 접속**, 조회·입력 권한 분리")
-O("(위험도) 발생도×심각도(고장유형 7종) 매트릭스로 4단계 등급 자동 분류")
-D("운영 144대 전수 판정 ⇒ **긴급 2대·주의 31대 우선 관리대상 지정**, 등록 시마다 재판정")
+
+append(copy.deepcopy(SPACER)); append(H2)
+O("개발 내용 ① 위험도 자동 판정 : 발생도(고장횟수)×심각도(고장유형 7종) 판정표로 4단계 등급")
+D("운영 144대 전수 판정 ⇒ **긴급 2대·주의 31대 우선 관리대상 지정**, 이력 등록 시마다 재판정")
 caption("【 발생도×심각도 판정표 및 등급별 조치 】")
 M = {"상시": ["주의", "긴급", "긴급", "긴급"], "빈번": ["관찰", "주의", "긴급", "긴급"], "개연": ["관찰", "주의", "주의", "긴급"],
      "가끔": ["정상", "관찰", "주의", "주의"], "희박": ["정상", "정상", "관찰", "관찰"]}
 FQ = ["희박", "가끔", "개연", "빈번", "상시"]; SV = ["치명", "위험", "한계", "경미"]
 COL = {"긴급": RED, "주의": ORG, "관찰": YEL, "정상": GRN}
-NB = {"l": NON, "r": NON, "t": NON, "b": NON}
 GAP = {"t": "", "b": NB, "fill": None}
 legend = [("긴급", "2대", "즉시 점검·교체 검토"), ("주의", "31대", "다음 정비 시 우선 확인"), ("관찰", "3대", "고장 추세 관찰"), ("정상", "108대", "정기 점검 유지")]
-rows = [[{"t": "심각도＼발생도", "cs": SUB9B}] + FQ + [dict(GAP, b={"l": NON, "r": NON, "t": NON, "b": NON}), {"t": "등급", "b": {"l": NON}}, "대수", "조 치"]]
+rows = [[{"t": "심각도＼발생도", "cs": SUB9B}] + FQ + [dict(GAP), {"t": "등급", "b": {"l": NON}}, "대수", "조 치"]]
 for i, sv in enumerate(SV):
     g, n, todo = legend[i]
     rows.append([{"t": sv, "cs": "18", "fill": HEAD_FILL}] +
@@ -284,21 +295,23 @@ photo_row([(f"{IMG}/r_board.png", PH, "① 취부 현황판"), (f"{IMG}/m_detail
     "① 편성·위치별 TM을 **등급 색**으로 표시, 긴급·주의만 골라 보기",
     "② TM을 누르면 **발생도·심각도 점수와 산출 근거** 표시",
     "③ 고장 내용을 입력하면 **고장코드 자동 분류**, 관련 수선 절차 쪽수 안내"])
-O("(AI 어시스턴트) 검색증강생성(RAG) 기반 문서 검색·데이터 분석·수선의뢰 등록")
-D("정비문서 187쪽 검색, 답변마다 **근거 문서·쪽수 표시** ⇒ 임의 생성 방지, 답변 신뢰성 확보")
+O("개발 내용 ② AI 어시스턴트 : 검색증강생성(RAG) 문서 검색, 음성 입력, 대화형 수선의뢰")
+D("정비문서 187쪽 검색, 답변마다 **근거 문서·쪽수 표시**, 문서에 없는 내용은 답하지 않음")
 photo_row([(f"{CAP}/mic_repair_on.png", (0, 448, 780, 1688), "① 음성 입력"), (f"{IMG}/r_chat.png", (0, 360, 780, 1600), "② AI 답변"),
            (f"{IMG}/m_chat.png", PH, "③ 문서 검색")], PHOTO_H, notes=[
     "[ AI 어시스턴트 활용 ]",
     "① 마이크를 누르고 말하면 **글자로 입력**, 앱 안 화면은 녹음 후 AI가 받아쓰기",
     "② “오늘 뭐부터 점검해야 돼?” 질문에 **긴급 TM과 이유** 답변",
     "③ 정비 기준 질문 예시 제공, 문서에 없는 내용은 **답하지 않음**"])
-O("(분석·리포트) 고장 통계 현황판, 전동기별 리포트(PDF·한글·워드)·QR 라벨")
+O("개발 내용 ③ 분석·리포트 : 대시보드 위젯 19종, TM별 리포트(PDF·한글·워드)·QR 라벨")
 photo_row([(f"{IMG}/m_report.png", PH, "① 리포트·QR"), (f"{IMG}/pc_dash.png", None, "② 대시보드 현황(PC)"),
            (f"{IMG}/pc_analysis.png", None, "③ 고장 통계 분석(PC)")], PHOTO_H)
-O("(AX 설계) AI는 검색·설명에, 판정은 검증 가능한 규칙으로")
-D("등급은 판정표로 계산 ⇒ 같은 이력이면 항상 같은 등급, AI 답변은 **근거 문서·쪽수**가 있을 때만 제시")
-D("현장 의견을 받아 **바이브 코딩으로 즉시 수정(13건)**, 자동 시험 99건으로 판정 규칙 검증 후 반영")
-photo_row([(f"{IMG}/m_feedback.png", PH, "① 현장 의견 접수"), (f"{CAP}/pc_updates.png", None, "② 업데이트 내역: 현장 의견 반영 표시(PC)")], PHOTO_H)
+O("개발 방식 : 현업 담당자가 생성형 AI(바이브 코딩)로 설계·개발·개선을 직접 수행")
+D("등급은 판정표로 계산(같은 이력이면 항상 같은 등급), AI는 문서 검색·받아쓰기에 사용 ⇒ **판정 검증 가능**")
+D("현장 의견 **13건 즉시 반영**, 자동 시험 99건으로 판정 규칙 검증, 외부 개발 용역비 0원(소요예산 70천원)")
+photo_row([(f"{IMG}/m_feedback.png", PH, "① 현장 의견 접수"), (f"{CAP}/pc_updates.png", None, "② 업데이트 내역(현장 의견 반영 표시)")], PHOTO_H2)
+O("결과물 형태 : 휴대폰·PC 겸용 웹 앱(설치 없이 주소로 접속) + 사용 가이드")
+D("메뉴 12개(현장·이력·분석·자료·관리), TM 171대·고장 이력 123건·외부수선 47건 단일 DB, 조회·입력 권한 분리")
 
 append(copy.deepcopy(SPACER)); append(H3)
 O("적용 희망부서 : 1호선 111~116편성 견인전동기 정비 담당 차량사업소")
