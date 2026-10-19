@@ -1,15 +1,16 @@
-"""AX 과제 결과보고 v4 — 사용자 작성 문서(제안서·AX 리더·중대재해 제안) 구성·문장 기반.
+"""AX 과제 결과보고 v5 — 화면 사진판(휴대폰 8장·PC 2장, 사진마다 설명).
+v4 — 사용자 작성 문서(제안서·AX 리더·중대재해 제안) 구성·문장 기반.
 v3 — 양식 서식 유지(줄간격만 220→180%), 사고 사례·노후 통계·판정 절차 그림, 최신 기능·성과 반영 (3쪽 이내)."""
 import copy, io, re, sys, zipfile, shutil
 from lxml import etree
 from PIL import Image
 from hwpx import HwpxDocument
 
-FORM, OUT, IMG, FIG = sys.argv[1:5]
+FORM, OUT, IMG, FIG, CAP = sys.argv[1:6]
 HP = "http://www.hancom.co.kr/hwpml/2011/paragraph"
 q = lambda t: f"{{{HP}}}{t}"
 MM = 7200 / 25.4
-LS = 180  # 본문 줄간격(양식 220%)
+LS = 170  # 본문 줄간격(양식 220%)
 
 doc = HwpxDocument.open(FORM)
 sec = doc.sections[0]
@@ -98,6 +99,44 @@ def pic_row(items, gap="  "):
     center_last(spacing_before_pt=4); add_mm(tallest + 3)
 
 PH = (0, 0, 780, 1240)
+
+CAPS = doc.ensure_run_style(size=9, font="한컴돋움", bold=True, color="#1F3864")
+_PP = {}
+def ppid(**fmt):
+    key = tuple(sorted(fmt.items()))
+    if key not in _PP:
+        p = doc.add_paragraph("")
+        doc.set_paragraph_format(paragraph_index=len(doc.paragraphs) - 1, **fmt)
+        _PP[key] = p.para_pr_id_ref; p.remove()
+    return _PP[key]
+
+def photo_grid(rows, img_w_mm, widths, shade="#DCE3F0"):
+    """rows: [[(path, box, caption), ...], ...] — 사진 줄 + 설명 줄을 번갈아 쌓은 표."""
+    ncol = len(rows[0])
+    t = doc.add_table(rows=2 * len(rows), cols=ncol, width=round(165 * MM))
+    t.set_column_widths(widths)
+    pc = ppid(alignment="CENTER", line_spacing_percent=100)
+    tallest_total = 0
+    for r, row in enumerate(rows):
+        tallest = 0
+        for c, (path, box, cap) in enumerate(row):
+            im = Image.open(path).convert("RGB")
+            if box: im = im.crop(box)
+            b = io.BytesIO(); im.save(b, "PNG", optimize=True)
+            item = doc.add_image(b.getvalue(), "png"); w, h = im.size
+            wmm = img_w_mm[c] if isinstance(img_w_mm, list) else img_w_mm
+            W = round(wmm * MM); H = round(W * h / w); tallest = max(tallest, H / MM)
+            p = t.cell(2 * r, c).paragraphs[0]
+            for run in list(p.runs): run.remove()
+            p.para_pr_id_ref = pc
+            p.add_picture(item, width=W, height=H, treat_as_char=True)
+            q2 = t.cell(2 * r + 1, c).paragraphs[0]
+            for run in list(q2.runs): run.remove()
+            q2.para_pr_id_ref = pc
+            q2.add_run(cap, char_pr_id_ref=CAPS)
+            t.set_cell_shading(2 * r + 1, c, shade)
+        tallest_total += tallest + 8
+    add_mm(tallest_total + 3)
 # ================= 본문 (사용자 작성 문서 3종의 구성·문장 기반, 숫자는 '26.10.19 DB) =================
 append(copy.deepcopy(SPACER), 6)
 doc.add_paragraph("53년째 승객 태운 전동기, 다음 사고는 언제인가 — 고장 이력 기반 위험도 자동 판정", char_pr_id_ref="16")
@@ -127,8 +166,15 @@ O("(AI 어시스턴트) 검색증강생성(RAG) 기반 문서 검색·데이터 
 D("정비문서 187쪽 검색, 답변마다 **근거 문서·쪽수 표시** ⇒ 임의 생성 방지, 답변 신뢰성 확보")
 D("대화·**음성**만으로 수선의뢰 등록, 고장코드 자동 분류(카카오톡 화면에서도 동작)")
 O("(분석·리포트) 고장 통계 현황판, 전동기별 리포트(PDF·한글·워드)·QR 라벨")
-pic_row([(f"{IMG}/r_board.png", PH, 34), (f"{IMG}/r_repair.png", PH, 34), (f"{IMG}/r_chat.png", (0, 360, 780, 1600), 34), (f"{IMG}/m_report.png", PH, 34)], gap=" ")
-caption("[취부 현황판]      [수선의뢰·고장코드 자동 분류]      [AI 어시스턴트]      [이력 리포트]")
+photo_grid([
+    [(f"{IMG}/r_board.png", PH, "취부 현황판(등급 색)"), (f"{IMG}/m_detail.png", PH, "위험도 산출 근거"),
+     (f"{IMG}/m_report.png", PH, "이력 리포트·QR 라벨"), (f"{IMG}/r_repair.png", PH, "고장코드 자동 분류")],
+    [(f"{CAP}/mic_repair_on.png", (0, 448, 780, 1688), "음성 입력(받아쓰기)"), (f"{IMG}/r_chat.png", (0, 360, 780, 1600), "AI 어시스턴트 답변"),
+     (f"{IMG}/m_chat.png", PH, "정비문서 검색"), (f"{IMG}/m_feedback.png", PH, "현장 의견 보내기")],
+], 32, [25, 25, 25, 25])
+photo_grid([
+    [(f"{IMG}/pc_dash.png", None, "대시보드 — 오늘 확인할 것·조치 필요·차량 건강"), (f"{IMG}/pc_grade.png", None, "등급 판정 기준(발생도×심각도 매트릭스)")],
+], 78, [50, 50])
 table([
     ["구분", "기존", "개선"],
     ["이력 관리", "Excel 분산 기록·취합", "171대·123건·47건 **단일 DB**, 등록 즉시 갱신"],
