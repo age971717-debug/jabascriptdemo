@@ -1281,6 +1281,27 @@ workspace `GS8VAndim2d3OBu4TcTX` = "권휘진's Lovable")에 원본 데이터를
 - 확인: 타입체크·ESLint(경고 17 기존)·단위 테스트 93/93, 실제 자료로 그래프별 휴대폰·PC 스크린샷.
 - **배포**: deployment `758051dd-b04a-4002-9d35-bab60f315cf1`.
 
+## 2026-10-19 음성 입력 (tm-cbm commit `7f35ff7` → `7df5cdc`)
+
+- 사용자: "음성인식 기능 넣고 싶은데" → "핸드폰에서 되게 해야지"(카카오톡 안 브라우저로 주로 씀).
+- 위치(화면 구성 그대로, 칸 옆 마이크 버튼만): 수선의뢰 "세부 고장내용", 챗봇 질문 칸(비밀번호 단계 제외), 현장 의견 칸.
+- 3단계 동작(`src/components/MicButton.tsx`):
+  ① 브라우저 음성 인식(Web Speech API, ko-KR — 크롬·삼성 인터넷·사파리, 무료·즉시)
+  ② 없거나 network·service-not-allowed·language-not-supported 오류면 녹음(`src/lib/wav-recorder.ts`: getUserMedia +
+     AudioContext ScriptProcessor → 16kHz 모노 WAV, 최대 30초; 기기별 압축 형식 차이를 피해 WebView에서도 동작하게) →
+     서버 함수 `transcribeSpeech`(`src/lib/speech.functions.ts`) → `transcribeAudio`(`rag.server.ts`, 챗봇과 같은 Gemini 모델·키,
+     정비 용어·시리얼 읽는 법을 지시문에 포함, temperature 0)
+  ③ 마이크 권한이 막히면 입력칸에 포커스 + "휴대폰 키보드의 마이크 버튼" 안내(키보드 음성 입력은 어느 앱에서나 됨).
+- 받아쓰기 정리(`src/lib/speech.ts` normalizeSpeech): 숫자 사이 "다시/대시/하이픈" → "-", "에프오" → F/O, "티엠" → TM —
+  자동 분류 키워드와 맞춤. 이미 적힌 내용 뒤에 이어 붙임.
+- 시험(로컬, Playwright 가짜 마이크): 가짜 음성 인식 → "파워시험 시 1호차 TM F/O" 입력 + 자동 분류 절연파괴·F/O, 챗봇
+  "88091-48 등급 알려줘" / 음성 인식 없음 → 녹음 2초(약 100KB WAV) → 서버 → Gemini 요청(가짜 키 → Google "API 키 오류" 응답
+  확인) / 음성 인식 network 오류 → 녹음으로 자동 전환 / 마이크 거부 → 입력칸 포커스·키보드 안내. 단위 테스트 99/99(WAV 머리말·
+  다운샘플·받아쓰기 정리). Gemini 키는 서버 번들에만.
+- **미확인(사용자 휴대폰 필요)**: 실제 목소리 인식 품질, 카카오톡 안 브라우저에서 마이크 권한이 허용되는지(②로 동작하는지).
+  ②는 Gemini 호출 1회 비용(소액, 챗봇과 같은 키). 크롬 ①은 음성이 구글 서버로 보내져 변환됨(사내 보안상 문제면 ②만 쓰게 바꿀 수 있음).
+- **배포**: deployment `564ac3e6-e0eb-465d-a72b-8cbd9cc88e9b`.
+
 ## 남은 것
 
 - **TM 리포트 자동완성 버그 + 대시보드 현황 탭 시각화 — 완료·배포(commit
