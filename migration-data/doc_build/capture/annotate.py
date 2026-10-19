@@ -35,6 +35,9 @@ A = {
 }
 A["m_feedback"] = (2, [(1, 22, 188, 348, 50), (2, 318, 272, 52, 46), (3, 22, 320, 348, 142), (4, 22, 520, 348, 46),
                        (5, 22, 580, 348, 40), (6, 22, 630, 348, 46)], (0, 50, 390, 690))
+A["m_board_simple"] = (2, [(1, 14, 143, 288, 104), (2, 27, 292, 205, 46), (3, 36, 443, 150, 60), (4, 316, 630, 60, 60),
+                           (5, 2, 703, 386, 55), (6, 10, 12, 45, 40)], None)
+SRC = {"m_board_simple": "m_board", "m_repair_a": "m_repair", "m_repair_b": "m_repair", "m_report_body": "m_report"}
 # 번호 없이 잘라 쓰는 화면
 CROP = {
     "m_board_critical": (2, (0, 90, 390, 700)), "m_chat": (2, (0, 50, 390, 760)), "m_chat_answer": (2, (0, 50, 390, 760)),
@@ -62,7 +65,7 @@ for _n, (_d, _c) in list(CROP.items()):
 def run(out):
     os.makedirs(out, exist_ok=True)
     for name, (dpr, marks, crop) in A.items():
-        src = name.split("_a")[0].split("_b")[0] if name.startswith("m_repair") else name.replace("_body", "")
+        src = SRC.get(name, name)
         im = Image.open(f"{HERE}/img/{src}.png").convert("RGB"); d = ImageDraw.Draw(im)
         r = round(13 * dpr); f = ImageFont.truetype(FONT, round(17 * dpr))
         for n, x, y, w, h in marks:
