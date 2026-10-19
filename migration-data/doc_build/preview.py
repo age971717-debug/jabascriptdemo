@@ -17,7 +17,9 @@ for c in head.iter("{%s}charPr" % NS["hh"]):
 ps = {}
 for p in head.iter("{%s}paraPr" % NS["hh"]):
     al = p.find("hh:align", NS); ls = p.find(".//hh:lineSpacing", NS)
-    ps[p.get("id")] = dict(align=(al.get("horizontal") if al is not None else "LEFT").lower(), ls=int(ls.get("value")) if ls is not None else 160)
+    ps[p.get("id")] = dict(align=(al.get("horizontal") if al is not None else "LEFT").lower(),
+                           ls=int(ls.get("value")) if ls is not None else 160,
+                           lt=ls.get("type") if ls is not None else "PERCENT")
 bf = {}
 for b in head.iter("{%s}borderFill" % NS["hh"]):
     w = b.find(".//hc:winBrush", NS); bf[b.get("id")] = w.get("faceColor") if w is not None else None
@@ -41,7 +43,8 @@ def para_html(p):
     pp = ps.get(p.get("paraPrIDRef"), dict(align="left", ls=160))
     br = "page-break-before:always;" if p.get("pageBreak") == "1" else ""
     inner = "".join(run_html(r) for r in p.findall("hp:run", NS)) or "&nbsp;"
-    return f'<div style="{br}text-align:{pp["align"]};line-height:{pp["ls"]/100*1.0:.2f};margin:0">{inner}</div>'
+    lh = f'{pp["ls"]/100:.2f}'  # 한글 실제 화면(사용자 캡처)과 맞춘 방식 그대로
+    return f'<div style="{br}text-align:{pp["align"]};line-height:{lh};margin:0">{inner}</div>'
 def tbl_html(t):
     rows = []
     for tr in t.findall("hp:tr", NS):

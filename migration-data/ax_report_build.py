@@ -40,6 +40,17 @@ for run in head.iter(q("run")):
         t = etree.SubElement(run, q("t")); t.text = "바이브 코딩 기반 AI 에이전트를 활용한 노후 견인전동기(TM) CBM 자동 진단 시스템"; break
 for t in head.iter(q("t")):
     if t.text == "팀": t.text = "9팀"
+TITLE_CS = doc.ensure_run_style(size=13, font="휴먼명조", bold=True)
+_hp = doc.add_paragraph(""); doc.set_paragraph_format(paragraph_index=len(doc.paragraphs) - 1, alignment="LEFT", line_spacing_percent=130)
+TITLE_PP = _hp.para_pr_id_ref; _hp.remove()
+widths_h = [7086, 32598, 5669, 4251]   # 과제명 25mm · 제목 115mm · 수행팀 20mm · 팀 15mm (합 49604 = 원래 표 폭)
+trh = head.find(f".//{q('tbl')}").find(q("tr"))
+for tc, w in zip(trh.findall(q("tc")), widths_h):
+    tc.find(q("cellSz")).set("width", str(w))
+for t in head.iter(q("t")):
+    if t.text and t.text.startswith("바이브 코딩"):
+        run = t.getparent(); run.set("charPrIDRef", TITLE_CS)
+        pp_ = run.getparent(); pp_.set("paraPrIDRef", TITLE_PP)
 
 def strip_layout(el):
     for ls in el.iter(q("linesegarray")): ls.getparent().remove(ls)
@@ -309,9 +320,15 @@ photo_row([(f"{IMG}/m_report.png", PH, "① 리포트·QR"), (f"{IMG}/pc_dash.pn
 O("개발 방식 : 현업 담당자가 생성형 AI(바이브 코딩)로 설계·개발·개선을 직접 수행")
 D("등급은 판정표로 계산(같은 이력이면 항상 같은 등급), AI는 문서 검색·받아쓰기에 사용 ⇒ **판정 검증 가능**")
 D("현장 의견 **13건 즉시 반영**, 자동 시험 99건으로 판정 규칙 검증, 외부 개발 용역비 0원(소요예산 70천원)")
-photo_row([(f"{IMG}/m_feedback.png", PH, "① 현장 의견 접수"), (f"{CAP}/pc_updates.png", None, "② 업데이트 내역(현장 의견 반영 표시)")], PHOTO_H2)
+photo_row([(f"{IMG}/m_feedback.png", PH, "① 현장 의견 접수"), (f"{CAP}/pc_updates.png", None, "② 업데이트 내역(의견 반영 표시)"), (f"{IMG}/pc_check.png", None, "③ 데이터 자동 점검")], PHOTO_H2)
 O("결과물 형태 : 휴대폰·PC 겸용 웹 앱(설치 없이 주소로 접속) + 사용 가이드")
-D("메뉴 12개(현장·이력·분석·자료·관리), TM 171대·고장 이력 123건·외부수선 47건 단일 DB, 조회·입력 권한 분리")
+D("TM 171대·고장 이력 123건·외부수선 47건을 단일 DB로 관리, 조회·입력 권한 분리, 메뉴 12개")
+caption("【 메뉴 구성 】")
+ntable([
+    ["현 장", "이 력", "분 석", "자 료", "관 리"],
+    [tb("취부현황판, TM 리포트(QR), 수선의뢰"), tb("고장 이력 ⇒ 외부수선 ⇒ 외주수선 대상"), tb("대시보드(현황·분석, 위젯 19종)"),
+     tb("정비문서 4종 열람·내려받기 (AI 검색은 모든 화면 챗봇)"), tb("데이터 관리·원본 데이터·정합성 검토·등급 기준·장치 확장·도움말")],
+], [19, 21, 19, 17, 24])
 
 append(copy.deepcopy(SPACER)); append(H3)
 O("적용 희망부서 : 1호선 111~116편성 견인전동기 정비 담당 차량사업소")
