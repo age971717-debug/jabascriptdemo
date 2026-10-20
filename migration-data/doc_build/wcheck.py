@@ -4,6 +4,7 @@ def em(s):
     s = s.replace("**", "")
     return sum(1.0 if ord(c) > 0x2E80 or c in "⇒×·【】①②③" else (0.5 if c == " " else 0.55) for c in s)
 def cap(width_mm, pt, ratio=0.96, spacing=-0.04):
+    return 39.8 * 14 / pt  # 사용자 확인: "(노후화) … 최장 53년" 39.6em이 딱 한 줄
     return width_mm / (pt * 0.3528 * ratio * (1 + spacing))
 if __name__ == "__main__":
     src = open(sys.argv[1]).read()
