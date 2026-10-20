@@ -256,10 +256,15 @@ RED, ORG, YEL, GRN = "#F4B6B6", "#F8CBAD", "#FFE699", "#C6E0B4"   # 인쇄용 �
 # ================= 본문 (양식 안내 문구대로) =================
 def tb(text): return {"t": [(text, T95, "L")]}
 append(copy.deepcopy(SPACER))
+caption("【 한눈에 보는 변화 】", before=2)
+GRAY = "#F2F2F2"
+def before(t): return {"t": [(t, T95, "C")], "fill": GRAY}
+def after(big, cs, note): return {"t": [("⇓", T95, "C"), (big, cs, "C"), (note, T95, "C")]}
 ntable([
-    ["전수 자동 판정", "정비문서 AI 검색", "말로 한 번 입력", "외부 개발 용역비"],
-    [{"t": "144대", "cs": KPI_R}, {"t": "187쪽", "cs": KPI_N}, {"t": "입력 1번", "cs": KPI_N}, {"t": "0원", "cs": KPI_R}],
-    [{"t": "긴급 2·주의 31대", "cs": T95}, {"t": "답변마다 근거 쪽수 표시", "cs": T95}, {"t": "자동 분류·동시 갱신", "cs": T95}, {"t": "바이브 코딩 자체 개발", "cs": T95}],
+    ["위험 TM 선별", "정비 기준 확인", "고장 기록", "개발 비용"],
+    [before("담당자 경험 판단"), before("문서 187쪽 직접 검색"), before("기록지 + 엑셀 재입력"), before("외부 용역 발주")],
+    [after("144대 자동 판정", BIG_R, "긴급 2·주의 31대"), after("AI 즉답", BIG_N, "답변마다 근거 쪽수"),
+     after("말로 1번 입력", BIG_N, "분류·갱신은 자동"), after("0원 자체 개발", BIG_R, "바이브 코딩")],
 ], [25, 25, 25, 25])
 
 append(H1)
