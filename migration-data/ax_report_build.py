@@ -1,4 +1,5 @@
-"""AX 과제 결과보고 v20 — 결과물 형태에 접속 주소·접근 비밀번호, 별도 담당자 비밀번호 안내.
+"""AX 과제 결과보고 v30 — 판정표 한 표(아래 2줄 등급별 조치), As-Is/To-Be 같은 일 짝 비교, 개발 방식 사진(현장 의견·대화 수선의뢰).
+v20 — 결과물 형태에 접속 주소·접근 비밀번호, 별도 담당자 비밀번호 안내.
 v19 — 표 중간 빈칸 없앰(사용연수·교체 이력은 위아래, 판정표·조치는 이중 세로선).
 v18 — 맨 위 성과 요약(AI·자동화 4칸) 복원, 본문에 AI·자동 처리 강조.
 v17 — 기능 중요도 순으로 정리(핵심 6개 앞세우고 자잘한 편의 기능 삭제).
@@ -20,6 +21,10 @@ from hwpx import HwpxDocument
 FORM, OUT, IMG, CAP = sys.argv[1:5]
 PHOTO_H = float(sys.argv[5]) if len(sys.argv) > 5 else 46
 PHOTO_H2 = float(sys.argv[6]) if len(sys.argv) > 6 else 40
+PHOTO_H3 = float(sys.argv[7]) if len(sys.argv) > 7 else 50
+CAP2 = sys.argv[8] if len(sys.argv) > 8 else "gcap/annot"
+PIC_W = float(sys.argv[9]) if len(sys.argv) > 9 else 72
+FB_BOX, CR_BOX = (0, 90, 780, 940), (0, 90, 780, 1180)
 HP = "http://www.hancom.co.kr/hwpml/2011/paragraph"
 q = lambda t: f"{{{HP}}}{t}"
 MM = 7200 / 25.4
@@ -145,16 +150,16 @@ def ntable(rows, widths, total_mm=165, head_rows=1, split=False):
         tr = etree.SubElement(tbl, q("tr")); c = 0
         for spec in row:
             spec = {"t": spec} if isinstance(spec, str) else dict(spec)
-            span = spec.get("span", 1)
+            span = spec.get("span", 1); rspan = spec.get("rspan", 1); c = spec.get("col", c)
             tc = copy.deepcopy(tc_t); tr.append(tc)
             tc.find(q("cellAddr")).set("colAddr", str(c)); tc.find(q("cellAddr")).set("rowAddr", str(r))
-            tc.find(q("cellSpan")).set("colSpan", str(span)); tc.find(q("cellSpan")).set("rowSpan", "1")
+            tc.find(q("cellSpan")).set("colSpan", str(span)); tc.find(q("cellSpan")).set("rowSpan", str(rspan))
             tc.find(q("cellSz")).set("width", str(round(W * sum(widths[c:c + span]) / tw)))
             is_head = r < head_rows
             left = NON if c == 0 else SOL
             right = NON if c + span == ncol else SOL
             top = THK if r == 0 else (DBL if r == head_rows else SOL)
-            bottom = DBL if r == head_rows - 1 else (THK if r == nrow - 1 else SOL)
+            bottom = DBL if r == head_rows - 1 else (THK if r + rspan - 1 == nrow - 1 else SOL)
             b = spec.get("b", {})
             left, right, top, bottom = b.get("l", left), b.get("r", right), b.get("t", top), b.get("b", bottom)
             fill = spec.get("fill", HEAD_FILL if is_head else None)
@@ -171,9 +176,11 @@ def ntable(rows, widths, total_mm=165, head_rows=1, split=False):
                 p = copy.deepcopy(p_t); p.set("paraPrIDRef", P_C if al == "C" else P_L)
                 for run in p.findall(q("run")): p.remove(run)
                 for ls in p.findall(q("linesegarray")): p.remove(ls)
-                for i, part in enumerate(re.split(r"\*\*", text)):
+                pieces = text if isinstance(text, list) else [(part, spec.get("bcs", T10B) if i % 2 else cs)
+                                                              for i, part in enumerate(re.split(r"\*\*", text))]
+                for part, pcs in pieces:
                     if not part: continue
-                    run = etree.SubElement(p, q("run")); run.set("charPrIDRef", T10B if (i % 2) else cs)
+                    run = etree.SubElement(p, q("run")); run.set("charPrIDRef", pcs)
                     etree.SubElement(run, q("t")).text = part
                 sub.append(p)
             c += span
@@ -254,7 +261,7 @@ NB = {"l": NON, "r": NON, "t": NON, "b": NON}
 BX = {"l": THK, "r": THK, "t": THK, "b": THK}
 RED, ORG, YEL, GRN = "#F4B6B6", "#F8CBAD", "#FFE699", "#C6E0B4"   # 인쇄용 연한 등급 색
 # ================= 본문 (양식 안내 문구대로) =================
-def tb(text): return {"t": [(text, T95, "L")]}
+def tb(text): return {"t": [(text, T95, "L")], "bcs": T95B}
 append(copy.deepcopy(SPACER))
 
 append(H1)
@@ -276,43 +283,50 @@ def asis(text): return {"t": text, "cs": T95}
 ntable([
     ["구 분", "As-Is (기존)", "To-Be (TM-CBM)"],
     [{"t": [("[ 기존 엑셀 관리 시트 그림 ]", H10, "C"), ("원본 문서의 그림을 붙여 넣으세요", T95, "C")], "fill": "#F2F2F2", "span": 2},
-     {"pic": (f"{IMG}/pc_board.png", None, 84)}],
-    [wk("현황 파악"), asis("엑셀 검색"), tb("휴대폰에서 171대를 등급 색으로 한눈에, 새 긴급·예비품 알림")],
-    [wk("위험 판단"), asis("담당자 경험"), tb("**144대 자동 판정**(긴급 2·주의 31대), 산출 근거 제시")],
-    [wk("고장 기록"), asis("수기 후 엑셀 입력"), tb("**말로 1번 입력**, 분류·갱신 자동('기타' 37.4⇒11.4%)")],
-    [wk("정비 기준"), asis("문서 직접 검색"), tb("**AI 즉답**, 답변마다 근거 문서·쪽수 표시")],
-    [wk("이력 관리"), asis("파일 분산"), tb("시리얼 기준 고장·외부수선·예비품 이력 통합(123건·47건)")],
-    [wk("보고·공유"), asis("수작업 집계"), tb("리포트·통계 자동 생성(PDF·한글·워드·QR 라벨)")],
-    [wk("개발 비용"), asis("외부 용역 발주"), tb("**0원 자체 개발**(현업 담당자가 바이브 코딩)")],
-], [11, 20, 69], split=True)
+     {"pic": (f"{IMG}/pc_board.png", None, PIC_W)}],
+    [wk("현황 파악"), asis("엑셀 열어 TM별 검색"), tb("**171대 등급을 편성·위치별 색으로 표시**, 휴대폰 즉시 확인")],
+    [wk("위험 판단"), asis("담당자 경험에 의존"), tb("**144대 자동 판정 ⇒ 긴급 2·주의 31대 선별**, 근거 제시")],
+    [wk("고장 기록"), asis("엑셀 입력, 분류 제각각"), tb("챗봇·음성으로 입력, **지침서 기준 고장코드 자동 분류**")],
+    [wk("정비 기준"), asis("문서 187쪽 직접 검색"), tb("**AI가 정비문서 187쪽에서 즉시 답변**, 근거 쪽수 함께 표시")],
+    [wk("이력 관리"), asis("이력 파일별 분산 보관"), tb("**고장·외부수선·예비품 이력 통합**, TM별 전체 이력 조회")],
+    [wk("보고·공유"), asis("보고 자료 수작업 작성"), tb("**TM별 리포트 자동 생성**(PDF·한글·워드), QR 라벨 인쇄")],
+    [wk("개발 비용"), asis("외부 용역 발주"), tb("**외부 용역비 0원**, 담당자가 바이브 코딩으로 직접 개발")],
+], [12, 26, 62], split=True)
 
 append(copy.deepcopy(SPACER)); append(H2)
 O("개발 내용 ① 위험도 자동 판정 및 고장 징후 선제 식별")
-D("발생도(최근 5년 고장 횟수)×심각도(고장유형 7종) 판정표로 **등급 4단계 자동 산출**")
+D("발생도(5년 고장 횟수)와 심각도(가장 심한 고장)가 만나는 칸으로 **등급 자동 판정**")
 D("이력이 등록되면 **171대 전수 즉시 재판정**, TM마다 점수와 산출 근거를 화면에 제시")
 D("평균 고장간격(MTBF)으로 **다음 정비 시점 예측**, 같은 위치의 **반복 고장 자동 탐지**")
 caption("【 발생도×심각도 판정표 및 등급별 조치 】")
 M = {"상시": ["주의", "긴급", "긴급", "긴급"], "빈번": ["관찰", "주의", "긴급", "긴급"], "개연": ["관찰", "주의", "주의", "긴급"],
      "가끔": ["정상", "관찰", "주의", "주의"], "희박": ["정상", "정상", "관찰", "관찰"]}
-FQ = ["희박", "가끔", "개연", "빈번", "상시"]; SV = ["치명", "위험", "한계", "경미"]
+FQ = [("희박", "0회"), ("가끔", "1회"), ("개연", "2회"), ("빈번", "3회"), ("상시", "4회↑")]
+SV = [("치명", "(절연파괴·소손)"), ("위험", "(코일 단락·리드선)"), ("한계", "(정류자·절연저항)"), ("경미", "(정기교체·기타)")]
 COL = {"긴급": RED, "주의": ORG, "관찰": YEL, "정상": GRN}
-GAP = {"t": "", "b": NB, "fill": None}
-legend = [("긴급", "2대", "즉시 점검·교체 검토"), ("주의", "31대", "다음 정비 시 우선 확인"), ("관찰", "3대", "고장 추세 관찰"), ("정상", "108대", "정기 점검 유지")]
-rows = [[{"t": "심각도＼발생도", "cs": SUB9B}] + FQ + [{"t": "등급", "b": {"l": DBL, "t": THK, "b": DBL}}, "대수", "조 치"]]
-for i, sv in enumerate(SV):
-    g, n, todo = legend[i]
-    rows.append([{"t": sv, "cs": "18", "fill": HEAD_FILL}] +
-                [{"t": M[f][3 - i], "fill": COL[M[f][3 - i]]} for f in FQ] +
-                [{"t": g, "cs": H10, "fill": COL[g], "b": {"l": DBL}}, {"t": n, "cs": T10B},
-                 {"t": todo, "align": "L"}])
-ntable(rows, [24, 10, 10, 10, 10, 10, 11, 12, 37])
-photo_row([(f"{IMG}/r_board.png", PH, "① 현황판 : 등급 색 표시"), (f"{IMG}/m_detail.png", PH, "② 누르면 점수·산출 근거"),
+GC = {"긴급": "#C00000", "주의": "#C55A11", "관찰": "#9C6500", "정상": "#38761D"}
+L9 = CS(size=9.5, font="휴먼명조")
+LG = {g: CS(size=9.5, font="한컴돋움", bold=True, color=c) for g, c in GC.items()}
+def leg(a, b):
+    out = []
+    for i, (g, n, todo) in enumerate((a, b)):
+        out += [(("　　" if i else "") + "■ " + g + " " + n, LG[g]), (" : " + todo, L9)]
+    return {"t": [(out, L9, "L")], "span": 5}
+rows = [[{"t": "심각도 ＼ 발생도", "cs": "18"}] + [{"t": [([(f, "18"), (f"({n})", T95)], "18", "C")]} for f, n in FQ]]
+for i, (sv, ex) in enumerate(SV):
+    rows.append([{"t": [([(sv, "18"), (" " + ex, T95)], "19", "C")], "fill": HEAD_FILL}] +
+                [{"t": M[f][3 - i], "fill": COL[M[f][3 - i]]} for f, _ in FQ])
+rows.append([{"t": [("등급별 조치", "18", "C"), ("(현재 대수)", T95, "C")], "rspan": 2, "fill": HEAD_FILL},
+             leg(("긴급", "2대", "즉시 점검·교체 검토"), ("주의", "31대", "다음 정비 시 우선 확인"))])
+rows.append([dict(leg(("관찰", "3대", "고장 추세 관찰"), ("정상", "108대", "정기 점검 유지")), col=1)])
+ntable(rows, [30, 14, 14, 14, 14, 14])
+photo_row([(f"{IMG}/r_board.png", PH, "① 현황판 : 등급 색 표시"), (f"{IMG}/m_detail.png", PH, "② 점수·산출 근거"),
            (f"{IMG}/r_repair.png", PH, "③ 고장코드 자동 분류")], PHOTO_H)
 O("개발 내용 ② AI 어시스턴트 : 검색증강생성(RAG)·음성 입력")
 D("**AI가 정비지침서·수선사양서·절차서를 검색해 답변**, 답마다 근거 문서·쪽수 표시")
-D("말하면 **AI가 받아쓰기**(카카오톡 안 화면 포함), 대화만으로 수선의뢰·사진 첨부")
+D("**음성 입력**(AI 받아쓰기, 카카오톡 안 화면 포함), 대화만으로 수선의뢰·사진 첨부")
 D("고장 내용의 단어로 **고장코드 자동 분류**(SOP-TM-001), 이력·취부현황 동시 갱신")
-photo_row([(f"{CAP}/mic_repair_on.png", (0, 448, 780, 1688), "① 말하면 글자로 입력"), (f"{IMG}/r_chat.png", (0, 360, 780, 1600), "② 긴급 TM과 이유 답변"),
+photo_row([(f"{CAP}/mic_repair_on.png", (0, 448, 780, 1688), "① 음성 입력"), (f"{IMG}/r_chat.png", (0, 360, 780, 1600), "② 긴급 TM과 이유 답변"),
            (f"{IMG}/m_chat.png", PH, "③ 정비문서 검색")], PHOTO_H)
 O("개발 내용 ③ 분석·리포트 : 대시보드 위젯 19종·TM 리포트")
 D("고장 추이·제작년도·제조사별 신뢰도·편성별 위험을 **대시보드가 자동 집계**")
@@ -320,9 +334,10 @@ D("TM별 **이력 요약 리포트를 PDF·한글·워드로 즉시 발행**, QR
 photo_row([(f"{IMG}/m_report.png", PH, "① 리포트·QR"), (f"{IMG}/pc_dash.png", None, "② 대시보드 현황(PC)"),
            (f"{IMG}/pc_analysis.png", None, "③ 고장 통계 분석(PC)")], PHOTO_H2)
 O("개발 방식 : 바이브 코딩으로 설계·개발·검증을 자체 수행")
-D("현장 의견을 받아 바로 수정·반영, 판정 규칙은 **자동 시험 99건으로 배포 전 검증**")
-D("데이터 8개 항목 자동 점검·변경 이력·백업으로 **다른 노선 이력 등 오류 5건 정리**")
-photo_row([(f"{IMG}/pc_check_crop.png", None, "① 데이터 자동 점검(8개 항목)"), (f"{IMG}/pc_changes.png", None, "② 변경 이력(감사 기록)")], PHOTO_H2)
+photo_row([(f"{IMG}/m_feedback.png", FB_BOX, "① 현장 의견 보내기"), (f"{CAP2}/m_chat_repair.png", CR_BOX, "② 대화로 수선의뢰")], PHOTO_H3,
+          notes=["현장 의견 ⇒ 바로 반영", "- 휴대폰 '현장 의견 보내기'로 요청", "- 담당자가 확인 후 바로 수정·반영",
+                 "**자동 시험으로 배포 전 검증**", "- 판정 규칙 자동 시험 99건 통과 후 배포", "- 기능을 고쳐도 판정 기준 그대로 유지",
+                 "**대화로 수선의뢰**", "- 고장 내용을 쓰면 빠진 정보만 AI가 질문"])
 O("결과물 형태 : 휴대폰·PC 겸용 웹 앱(설치 없음) + 사용 가이드")
 D("**접속 : https://tm-cbm.lovable.app (접근 비밀번호 1488)**, 메뉴 12개")
 D("조회·검색·출력은 누구나, 데이터 등록·수정(관리용)은 **별도 담당자 비밀번호**")
