@@ -243,3 +243,11 @@ table.t.pics p.it.hang.hang2:has(> span:first-child > b.cn:first-child) { paddin
 .coverwrap > p:nth-of-type(2) span { font-size: 14.5pt !important; color: #D5E3F7 !important; }
 .coverwrap > p:nth-of-type(3) { margin: 4mm 0 30mm !important; }
 .coverwrap > p:nth-of-type(3) span { color: #F8C79F !important; font-size: 12pt !important; }
+/* ===== 표 구분선: 인쇄·화면 모두 잘 보이게 진하게(문서 전체) ===== */
+table.t { border: 0.9pt solid #8FA3C6; }
+table.t td { border-right: 0.8pt solid #A7B6D1; border-bottom: 0.8pt solid #A7B6D1; }
+table.t tr:first-child td[style*="background:#DFE6F7"] { border-bottom: 1.1pt solid #7F95BC; }
+table.t.pics p.it { border-top: 0.8pt solid #B9C6DD; }
+table.t.part td, table.t.chapter td { border: 0 !important; }
+table.t.tipbox, table.t.warnbox { border-top: 0; border-right: 0; border-bottom: 0; }
+/* 머리말 이동 버튼 설명용(본문 표 안) */

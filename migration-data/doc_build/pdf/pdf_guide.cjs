@@ -14,13 +14,14 @@ const [cover, body, out, header] = process.argv.slice(2);
   const c = await b.newPage(); await c.goto('file://' + cover); await c.waitForTimeout(400);
   await c.pdf({ path: out + '.cover.pdf', format: 'A4', printBackground: true, preferCSSPageSize: true });
   await p.goto('file://' + body); await p.waitForTimeout(800);
+  await p.evaluate(m => document.querySelectorAll('span.pn').forEach(e => { e.textContent = m[e.dataset.p] ?? '?'; }), secmap);
   const font = 'font-family:Pretendard,sans-serif;font-size:7.5pt;color:#7a8597;width:100%;';
-  const btn = 'display:inline-block;border:0.6pt solid #8FAAD6;border-radius:6pt;padding:0.4pt 6pt;margin-right:6pt;color:#1F5FBF;font-weight:700;background:#EEF3FB;';
+  const btn = 'display:inline-block;border:0.6pt solid #8FAAD6;border-radius:6pt;padding:0.4pt 6pt;margin-left:4pt;color:#1F5FBF;font-weight:700;background:#EEF3FB;';
   await p.pdf({
     path: out + '.body.pdf', format: 'A4', printBackground: true,
     margin: { top: '19mm', bottom: '16mm', left: '17mm', right: '17mm' },
     displayHeaderFooter: true,
-    headerTemplate: `<div style="${font}margin:0 17mm;padding-bottom:2mm;border-bottom:0.5pt solid #C5D0E3;display:flex;justify-content:space-between"><span>${header}</span><span><span style="${btn}">◀ 뒤로</span><span style="${btn}">⌂ 목차</span>2026. 10.</span></div>`,
+    headerTemplate: `<div style="${font}margin:0 17mm;padding-bottom:2mm;border-bottom:0.5pt solid #C5D0E3;display:flex;justify-content:space-between"><span>${header}</span><span>${["⌂ 목차", "1 시작", "2 기본 업무", "3 활용", "4 관리", "부록"].map(t => `<span style="${btn}">${t}</span>`).join("")}</span></div>`,
     footerTemplate: `<div style="${font}text-align:center">- <span class="pageNumber"></span> -</div>`,
   });
   console.log(JSON.stringify(secmap));

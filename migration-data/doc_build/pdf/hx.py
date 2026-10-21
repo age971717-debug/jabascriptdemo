@@ -319,6 +319,7 @@ class Doc:
                 forced.add(len(chunks))
             else:
                 seg.append((kind, b))
+        chunks = [re.sub(r"\{\{p:([^}]+)\}\}", r'<span class="pn" data-p="\1">00</span>', c) for c in chunks]
         is_part = ['class="t part"' in c or 'class="t chapter"' in c for c in chunks]
         ax = next((k for k, c in enumerate(chunks) if "APPENDIX" in c), 10 ** 9)   # 부록부터는 촘촘한 표
         # ① 덩어리 높이 재기
@@ -399,29 +400,36 @@ class Doc:
                 if k in secmap:
                     for r in pg.search_for(label):
                         pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(r.x0 - 30, r.y0 - 8, r.x1 + 30, r.y1 + 8), "page": secmap[k], "to": pymupdf.Point(0, 0)})
-        # 머리말 버튼: ◀ 뒤로 = 이동하기 전 쪽(GoBack), ⌂ 목차 = 본문 1쪽(가이드 구성)
-        def hit(pg, label):
-            rs = [r for r in pg.search_for(label) if r.y1 < 60]
-            if not rs:
-                return None
-            u = rs[0]
-            for r in rs[1:]:
-                u |= r
-            return pymupdf.Rect(u.x0 - 5, u.y0 - 3, u.x1 + 5, u.y1 + 3)
+        # 목차 표: '2-1 현황판 5쪽' 한 묶음을 누르면 그 절로
+        toc = next((n for n in range(1, len(doc)) if "절 · 쪽" in doc[n].get_text()), 1)
+        ws = doc[toc].get_text("words")
+        for a, w in enumerate(ws):
+            key = w[4] if re.fullmatch(r"\d-\d", w[4]) else (f"부록 {ws[a + 1][4]}" if w[4] == "부록" and a + 1 < len(ws) and ws[a + 1][4].isdigit() else None)
+            if key in secmap:
+                r = pymupdf.Rect(w[:4])
+                for v in ws[a + 1:a + 8]:
+                    if abs(v[1] - w[1]) > 3:
+                        break
+                    r |= pymupdf.Rect(v[:4])
+                    if v[4].endswith("쪽"):
+                        break
+                doc[toc].insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": secmap[key], "to": pymupdf.Point(0, 0)})
+        for r in [r for r in doc[toc].search_for("부록 ▶") if r.y1 > 60]:
+            if "부록 1" in secmap:
+                doc[toc].insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": secmap["부록 1"], "to": pymupdf.Point(0, 0)})
+        # 머리말 이동 버튼(모든 뷰어에서 되는 일반 링크): 목차 · PART 1~4 · 부록
+        nav = {"⌂ 목차": toc, "1 시작": secmap.get("PART 1"), "2 기본 업무": secmap.get("PART 2"), "3 활용": secmap.get("PART 3"),
+               "4 관리": secmap.get("PART 4"), "부록": secmap.get("부록 1")}
         for pno in range(1, len(doc)):
             pg = doc[pno]
-            r = hit(pg, "◀ 뒤로")
-            if r:
-                pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": 0, "to": pymupdf.Point(0, 0)})
-            r = hit(pg, "⌂ 목차")
-            if r:
-                pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": 1, "to": pymupdf.Point(0, 0)})
-        cover_ref = f"/D [ {doc[0].xref} 0 R"
-        for pno in range(1, len(doc)):
-            for x in re.findall(r"(\d+) 0 R", doc.xref_get_key(doc[pno].xref, "Annots")[1]):
-                o = doc.xref_object(int(x))
-                if cover_ref in o:   # 표지로 가는 머리말 링크 = '뒤로'
-                    doc.xref_set_key(int(x), "A", "<</S/Named/N/GoBack>>")
+            for label, target in nav.items():
+                rs = [r for r in pg.search_for(label) if r.y1 < 60]
+                if target is None or not rs:
+                    continue
+                u = rs[0]
+                for r in rs[1:]:
+                    u |= r
+                pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(u.x0 - 5, u.y0 - 3, u.x1 + 5, u.y1 + 3), "page": target, "to": pymupdf.Point(0, 0)})
         doc.set_metadata({"title": "TM-CBM 사용 가이드", "author": "9팀", "subject": "견인전동기(TM) 진단·수선의뢰 관리 앱 사용 가이드"})
         doc.save(path, deflate=True, garbage=3); os.remove(path + ".cover.pdf"); os.remove(path + ".body.pdf")
         print(self.layout)
