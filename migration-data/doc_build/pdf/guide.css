@@ -124,3 +124,22 @@ table.t td p { line-height: 1.45 !important; }
 
 /* 주요 내용(goal) 칸 */
 table.t td[style*="#DFE6F7"] { color: #1F3864; }
+
+/* 등급: 글씨 색 + 옅은 배경(알약 모양) */
+b.g { padding: 0.2pt 3.5pt; border-radius: 3pt; }
+b.g0 { background: #FBE0E0; } b.g1 { background: #FDE6D4; } b.g2 { background: #FFF3C4; } b.g3 { background: #E2F1D8; } b.g4 { background: #DDEBF8; } b.g5 { background: #ECECEC; }
+td.gc { text-align: center; }
+td.gc p { text-align: center !important; }
+td.gc b.g { background: transparent; padding: 0; font-size: 10.5pt; }
+
+/* 사진 칸: 사진이 칸을 꽉 채우게 */
+table.t td.img { padding: 3pt; }
+
+/* 흐름 띠: 단계 이름은 한 줄로 */
+table.t.flow td { white-space: nowrap; padding-left: 3pt; padding-right: 3pt; }
+table.t.flow td span { letter-spacing: -0.02em; }
+/* 사진 + 번호 설명: 설명 글은 조금 크게, 세로 가운데 */
+table.t.pics td:not(.img) { padding: 8pt 12pt; }
+/* 사진 옆 번호 설명은 조금 크게(읽기 편하게) */
+table.t.pics td:not(.img) p span { font-size: 10.5pt !important; }
+table.t.pics td:not(.img) p { line-height: 1.65 !important; }

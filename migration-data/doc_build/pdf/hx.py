@@ -185,11 +185,20 @@ class Doc:
             kind = " pics"
         elif t.rows == 1 and t.cols == 1 and t.grid[0][0].shade == "#1F3864":
             kind = " chapter"
+        t0 = "".join(r.a[0] for p in t.grid[0][0].paragraphs for r in p.runs if r.kind == "t").strip()
+        if t0[:1] and "①" <= t0[:1] <= "⑮":
+            kind += " nums"
+        if any("".join(r.a[0] for p in c.paragraphs for r in p.runs if r.kind == "t").strip() == "⇒" for row in t.grid for c in row):
+            kind += " flow"
         rows = []
         for row in t.grid:
             tds = []
             for c in row:
                 st = f' style="background:{c.shade}"' if c.shade else ""
+                txt = "".join(r.a[0] for p in c.paragraphs for r in p.runs if r.kind == "t").strip()
+                if not c.shade and txt in GRADE_FILL:
+                    st = f' class="gc" style="background:{GRADE_FILL[txt]}"'
+                    tds.append(f"<td{st}>" + "".join(self._para(p, True) for p in c.paragraphs) + "</td>"); continue
                 has_img = any(r.kind == "img" for p in c.paragraphs for r in p.runs)
                 cl = ' class="img"' if has_img else ""
                 tds.append(f"<td{cl}{st}>" + "".join(self._para(p, True) for p in c.paragraphs) + "</td>")
@@ -226,7 +235,18 @@ class Doc:
                 out.append(h)
             i += 1
         # 빈 간격 문단은 쪽 배치에서 따로 쓰지 않음(간격은 쪽마다 고르게 나눔)
-        return [c for c in out if not c.startswith('<div style="height:')]
+        out = [c for c in out if not c.startswith('<div style="height:')]
+        # 그림 + 바로 뒤 번호 설명표(①②…로 시작)는 같은 쪽에
+        merged = []
+        for c in out:
+            follows_pic = merged and 'img class="sc"' in merged[-1]
+            is_nums = c.startswith('<table class="t nums') or bool(re.match(r'^<table class="t"[^>]*><colgroup>.*?</colgroup><tr><td[^>]*><p[^>]*><span[^>]*><b class="cn">', c))
+            is_note = c.startswith('<p') and re.search(r'>- (그 밖에|본문)', c[:400])
+            if follows_pic and (is_nums or is_note):
+                merged[-1] = '<div class="keep">' + merged[-1] + c + "</div>"
+            else:
+                merged.append(c)
+        return merged
 
     def save(self, path):
         cover, body, seen = [], [], False
@@ -261,16 +281,36 @@ class Doc:
         import json
         m = json.loads(subprocess.run(["node", MEASURE_JS, base + "_measure.html"], check=True, capture_output=True, text=True).stdout)
         # ② 쪽 나누기: 그림은 0.82~1.35배로 줄이고 늘릴 수 있다고 보고 순서대로 채움, 장 띠는 쪽 아래 40%에 오지 않게
-        H, SMIN = PAGE_H, 0.82
-        pages, cur, fixed, img = [], [], 0.0, 0.0
-        for k, (hgt, ih) in enumerate(m):
-            fx, im = hgt - ih, ih
-            need = fixed + fx + (img + im) * SMIN + GAP_MIN * len(cur)
-            part_low = is_part[k] and cur and (fixed + img) > H * 0.6
-            if cur and (need > H or part_low or k in forced):
-                pages.append(cur); cur, fixed, img = [], 0.0, 0.0
-            cur.append(k); fixed += fx; img += im
-        pages.append(cur)
+        H, SMIN, SMAX = PAGE_H, 0.88, 1.4
+        n = len(m)
+        def fits(i, j):   # 덩어리 i..j-1 을 한 쪽에
+            fx = sum(m[k][0] - m[k][1] for k in range(i, j)); im = sum(m[k][1] for k in range(i, j))
+            if any(k in forced for k in range(i + 1, j)):
+                return None
+            for q in range(i, j):   # 장 띠 뒤로 두 덩어리는 같은 쪽에
+                if is_part[q] and q + 2 > j - 1 and not (j == n or j in forced):
+                    return None
+            lo = fx + im * SMIN + GAP_MIN * (j - i - 1)
+            if lo > H and j - i > 1:
+                return None
+            hi = fx + im * SMAX + GAP_MIN * (j - i - 1) + 6 * (j - i - 1)   # 간격은 덩어리당 최대 6mm 더 벌릴 수 있음
+            waste = max(0.0, H - hi)
+            return waste
+        INF = float("inf"); best = [INF] * (n + 1); prev = [0] * (n + 1); best[0] = 0
+        for j in range(1, n + 1):
+            for i in range(j - 1, -1, -1):
+                w = fits(i, j)
+                if w is None:
+                    if any(k in forced for k in range(i + 1, j)):
+                        break
+                    continue
+                last = (j == n)
+                c = best[i] + (0 if last and w < H * 0.5 else w * w) + 900
+                if c < best[j]:
+                    best[j], prev[j] = c, i
+        pages, j = [], n
+        while j > 0:
+            pages.insert(0, list(range(prev[j], j))); j = prev[j]
         appx = lambda pg: any('APPENDIX' in chunks[k] for k in pg)
         with open(base + "_body.html", "w", encoding="utf-8") as f:
             f.write(head + "<style>@page{size:A4;margin:19mm 17mm 16mm 17mm} body{width:176mm}</style><body>"
@@ -285,6 +325,7 @@ class Doc:
         return True, ()
 
 
+GRADE_FILL = {"긴급": "#F8D0D0", "주의": "#FBDDC6", "관찰": "#FFF0B8", "정상": "#D7EDCB"}
 PAGE_H = 297 - 19 - 16 - 2   # 본문 높이(mm), 2mm 여유
 GAP_MIN = 2.2                 # 덩어리 사이 최소 간격(mm)
 MEASURE_JS = os.path.join(os.path.dirname(__file__), "measure.cjs")
@@ -292,11 +333,28 @@ FILL_JS = """
 // 쪽마다: 그림 배율을 맞춰 높이를 채우고, 남는 공간은 덩어리 사이에 고르게 나눔
 const MM = 96 / 25.4, H = %(H)s * MM, GMIN = %(G)s * MM, GMAX = 9 * MM;
 const report = [];
+// 외톨이 줄 없애기: 마지막 줄에 글자가 조금만 남는 문단은 자간을 아주 조금 줄여 한 줄 덜 쓰게
+const lines = el => { const r = document.createRange(); r.selectNodeContents(el);
+  const ys = new Set([...r.getClientRects()].filter(x => x.width > 1).map(x => Math.round(x.top))); return ys.size; };
+document.querySelectorAll('section.page p').forEach(el => {
+  if (el.classList.contains('h2') || !el.textContent.trim()) return;
+  const n = lines(el); if (n < 2) return;
+  for (const ls of [-0.015, -0.03, -0.045]) {
+    el.style.letterSpacing = ls + 'em'; el.querySelectorAll('span').forEach(sp => sp.style.letterSpacing = ls + 'em');
+    if (lines(el) < n) return;
+  }
+  el.style.letterSpacing = ''; el.querySelectorAll('span').forEach(sp => sp.style.letterSpacing = '');
+});
 document.querySelectorAll('section.page').forEach((pg, n) => {
   const blks = [...pg.querySelectorAll(':scope > .blk')], imgs = [...pg.querySelectorAll('img.sc')];
   const used = () => blks.reduce((a, b) => a + b.getBoundingClientRect().height, 0) + GMIN * (blks.length - 1);
-  const setS = s => imgs.forEach(im => { im.style.width = (im.dataset.w * s) + 'mm'; im.style.height = (im.dataset.h * s) + 'mm'; });
-  let lo = 0.7, hi = 1.35, s = 1;
+  const setS = s => imgs.forEach(im => { const w = Math.min(im.dataset.w * s, 168); const h = im.dataset.h * w / im.dataset.w;
+    im.style.width = w + 'mm'; im.style.height = h + 'mm';
+    const td = im.closest('td'), tb = im.closest('table');
+    const tds = tb ? tb.querySelectorAll('td') : [];
+    if (tb && tb.classList.contains('pics') && td === tds[0] && tb.querySelectorAll('col').length === 2 && tds[1] && !tds[1].querySelector('img')) {
+      const cols = tb.querySelectorAll('col'); cols[0].style.width = Math.min(w + 8, 120) + 'mm'; cols[1].style.width = 'auto'; } });
+  let lo = 0.85, hi = 1.4, s = 1;
   if (imgs.length) { setS(hi); if (used() > H) { for (let i = 0; i < 18; i++) { s = (lo + hi) / 2; setS(s); if (used() > H) hi = s; else lo = s; } s = lo; setS(s); } else s = hi; }
   let free = H - used();
   if (free > blks.length * GMAX) {
