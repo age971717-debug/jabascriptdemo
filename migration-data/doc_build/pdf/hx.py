@@ -431,7 +431,7 @@ class Doc:
                     u |= r
                 pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(u.x0 - 5, u.y0 - 3, u.x1 + 5, u.y1 + 3), "page": target, "to": pymupdf.Point(0, 0)})
         doc.set_metadata({"title": "TM-CBM 사용 가이드", "author": "9팀", "subject": "견인전동기(TM) 진단·수선의뢰 관리 앱 사용 가이드"})
-        doc.save(path, deflate=True, garbage=3); os.remove(path + ".cover.pdf"); os.remove(path + ".body.pdf")
+        doc.save(path, deflate=True, garbage=1); os.remove(path + ".cover.pdf"); os.remove(path + ".body.pdf")   # garbage=3(중복 합치기)은 글꼴 조각을 잘못 합쳐 글자가 깨진 적 있음
         print(self.layout)
         return True, ()
 
