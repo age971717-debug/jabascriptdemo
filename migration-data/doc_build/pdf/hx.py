@@ -187,6 +187,8 @@ class Doc:
             kind = " pics"
         elif t.rows == 1 and t.cols == 1 and t.grid[0][0].shade == "#1F3864":
             kind = " chapter"
+        if not kind and t.rows == 1 and t.cols == 2 and any(r.kind == "img" for p in t.grid[0][0].paragraphs for r in p.runs):
+            kind = " pics side"
         t0 = "".join(r.a[0] for p in t.grid[0][0].paragraphs for r in p.runs if r.kind == "t").strip()
         if t0[:1] and "①" <= t0[:1] <= "⑮":
             kind += " nums"
@@ -301,25 +303,23 @@ class Doc:
         is_part = ['class="t part"' in c or 'class="t chapter"' in c for c in chunks]
         # ① 덩어리 높이 재기
         with open(base + "_measure.html", "w", encoding="utf-8") as f:
-            f.write(head + '<body><div style="width:176mm">' + "".join(f'<div class="blk">{c}</div>' for c in chunks) + "</div></body></html>")
+            f.write(head + '<style>body{width:176mm}</style><body><div style="width:176mm">' + "".join(f'<div class="blk">{c}</div>' for c in chunks) + f"</div><script>{SETSCALE_JS % {}}</script></body></html>")
         import json
         m = json.loads(subprocess.run(["node", MEASURE_JS, base + "_measure.html"], check=True, capture_output=True, text=True).stdout)
         # ② 쪽 나누기: 그림은 0.82~1.35배로 줄이고 늘릴 수 있다고 보고 순서대로 채움, 장 띠는 쪽 아래 40%에 오지 않게
         H, SMIN, SMAX = PAGE_H, 0.8, 1.4
         n = len(m)
         def fits(i, j):   # 덩어리 i..j-1 을 한 쪽에
-            fx = sum(m[k][0] - m[k][1] for k in range(i, j)); im = sum(m[k][1] for k in range(i, j))
             if any(k in forced for k in range(i + 1, j)):
                 return None
             for q in range(i, j):   # 장 띠 뒤로 두 덩어리는 같은 쪽에
                 if is_part[q] and q + 2 > j - 1 and not (j == n or j in forced):
                     return None
-            lo = fx + im * SMIN + GAP_MIN * (j - i - 1)
+            lo = sum(m[k][1] for k in range(i, j)) + GAP_MIN * (j - i - 1)
             if lo > H and j - i > 1:
                 return None
-            hi = fx + im * SMAX + GAP_MIN * (j - i - 1) + 2.3 * (j - i - 1)   # 간격은 덩어리당 최대 2.3mm만 더 벌림(빽빽하게)
-            waste = max(0.0, H - hi)
-            return waste
+            hi = sum(m[k][2] for k in range(i, j)) + (GAP_MIN + 2.3) * (j - i - 1)
+            return max(0.0, H - hi)
         INF = float("inf"); best = [INF] * (n + 1); prev = [0] * (n + 1); best[0] = 0
         for j in range(1, n + 1):
             for i in range(j - 1, -1, -1):
@@ -353,7 +353,21 @@ GRADE_FILL = {"긴급": "#F8D0D0", "주의": "#FBDDC6", "관찰": "#FFF0B8", "�
 PAGE_H = 297 - 19 - 16 - 2   # 본문 높이(mm), 2mm 여유
 GAP_MIN = 2.2                 # 덩어리 사이 최소 간격(mm)
 MEASURE_JS = os.path.join(os.path.dirname(__file__), "measure.cjs")
-FILL_JS = """
+SETSCALE_JS = """
+function setScale(imgs, s) { imgs.forEach(im => { const w = Math.min(im.dataset.w * s, 168);
+    const td = im.closest('td'), tb = im.closest('table'); const tds = tb ? [...tb.querySelectorAll('td')] : [];
+    // 사진 왼쪽 + 설명 오른쪽(1줄 2칸) 표: 사진 칸을 사진 폭에 맞춰 넓힘, 설명 칸은 70mm 이상
+    const side = tb && tds.length === 2 && td === tds[0] && !tds[1].querySelector('img') && tb.querySelectorAll('col').length === 2;
+    const ww = side ? Math.min(w, 100) : w;
+    im.style.width = ww + 'mm'; im.style.height = (im.dataset.h * ww / im.dataset.w) + 'mm';
+    if (side) { const cols = tb.querySelectorAll('col'); cols[0].style.width = (ww + 5) + 'mm'; cols[1].style.width = 'auto'; } });
+    // 어떤 사진도 칸 밖으로 나가지 않게
+    imgs.forEach(im => { const td = im.closest('td'); if (!td) return; const cs = getComputedStyle(td);
+      const room = td.getBoundingClientRect().width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2;
+      const cur = im.getBoundingClientRect().width;
+      if (cur > room) { const r = room / cur; im.style.width = (cur * r) + 'px'; im.style.height = (im.getBoundingClientRect().height * r) + 'px'; } }); }
+"""
+FILL_JS = SETSCALE_JS + """
 // 쪽마다: 그림 배율을 맞춰 높이를 채우고, 남는 공간은 덩어리 사이에 고르게 나눔
 const MM = 96 / 25.4, H = %(H)s * MM, GMIN = %(G)s * MM, GMAX = 4.5 * MM;
 const report = [];
@@ -372,12 +386,7 @@ document.querySelectorAll('section.page p').forEach(el => {
 document.querySelectorAll('section.page').forEach((pg, n) => {
   const blks = [...pg.querySelectorAll(':scope > .blk')], imgs = [...pg.querySelectorAll('img.sc')];
   const used = () => blks.reduce((a, b) => a + b.getBoundingClientRect().height, 0) + GMIN * (blks.length - 1);
-  const setS = s => imgs.forEach(im => { const w = Math.min(im.dataset.w * s, 168); const h = im.dataset.h * w / im.dataset.w;
-    im.style.width = w + 'mm'; im.style.height = h + 'mm';
-    const td = im.closest('td'), tb = im.closest('table');
-    const tds = tb ? tb.querySelectorAll('td') : [];
-    if (tb && tb.classList.contains('pics') && td === tds[0] && tb.querySelectorAll('col').length === 2 && tds[1] && !tds[1].querySelector('img')) {
-      const cols = tb.querySelectorAll('col'); cols[0].style.width = Math.min(w + 8, 120) + 'mm'; cols[1].style.width = 'auto'; } });
+  const setS = sc => setScale(imgs, sc);
   let lo = 0.78, hi = 1.4, s = 1;
   if (imgs.length) { setS(hi); if (used() > H) { for (let i = 0; i < 18; i++) { s = (lo + hi) / 2; setS(s); if (used() > H) hi = s; else lo = s; } s = lo; setS(s); } else s = hi; }
   let free = H - used();

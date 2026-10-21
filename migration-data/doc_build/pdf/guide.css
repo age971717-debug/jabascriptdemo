@@ -78,7 +78,7 @@ section.page:last-child { break-after: auto; }
 .blk { display: flow-root; }
 .blk > :first-child { margin-top: 0 !important; }
 .blk > :last-child { margin-bottom: 0 !important; }
-table.t td.img img { max-width: 100%; object-fit: contain; }
+table.t td.img img { display: block; margin: 0 auto; }
 
 /* 표지 아래 여백 채우기 */
 .coverwrap p.h2 { margin-top: 14pt !important; }
@@ -157,3 +157,14 @@ table.t.pics p.it span { font-size: 12pt !important; }
 table.t.pics p.ds span, table.t.pics p.ds b.g { font-size: 10.8pt !important; }
 /* 본문 단독 줄(- …)은 표 글씨보다 조금 크게 */
 section.page > .blk > p span { font-size: 11.4pt; }
+
+/* 사진 옆 설명: 글씨 크게, 칸 가득 */
+table.t.pics p.it span { font-size: 12.5pt !important; }
+table.t.pics p.ds span, table.t.pics p.ds b.g { font-size: 11.2pt !important; }
+table.t.pics p.it { margin-top: 9pt !important; padding-top: 9pt; }
+
+/* 사진 옆 설명(한 항목 한 문단) */
+table.t.pics p.it { margin-top: 5pt !important; padding-top: 5pt; }
+table.t.pics p.it span { font-size: 11.2pt !important; }
+table.t.pics p.it span[style*="font-weight:700"] { font-size: 11.6pt !important; }
+table.t.pics p.it:first-child { margin-top: 0 !important; padding-top: 0; }
