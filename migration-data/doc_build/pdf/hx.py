@@ -136,7 +136,7 @@ class Doc:
             t = re.sub(r"(?<![가-힣])(긴급|주의|관찰|정상|예비품|불용대기)(?![가-힣]*(?:사항|하세요|깊))",
                        lambda m: f'<b class="g g{["긴급","주의","관찰","정상","예비품","불용대기"].index(m.group(1))}">{m.group(1)}</b>', t)
             t = t.replace("⇒", '<span class="ar">⇒</span>')
-        if s.get("font") != "HY헤드라인M":   # 번호(①②…)는 어디서나 빨간 동그라미(번호 칸 포함)
+        if True:   # 번호(①②…)는 어디서나 빨간 동그라미(번호 칸·소제목 포함)
             t = re.sub(r"([①-⑮])", lambda m: f'<b class="cn" data-n="{ord(m.group(1)) - 0x245F}">{m.group(1)}</b>', t)
         if s.get("color") == "#1F4E79" and (text.startswith("TIP  ") or text.startswith("주의  ")):
             lead, rest = text.split("  ", 1)
@@ -175,7 +175,8 @@ class Doc:
             main, _, sub = rest.partition(" : ")
             badge = f'<span class="hn">{html.escape(num)}</span>' if num else '<span class="hn dot"></span>'
             subh = f'<span class="hs">{html.escape(sub)}</span>' if sub else ""
-            return f'<p class="h2">{badge}<span class="ht">{html.escape(main)}</span>{subh}</p>'
+            ht = re.sub(r"([①-⑮])", lambda m: f'<b class="cn" data-n="{ord(m.group(1)) - 0x245F}">{m.group(1)}</b>', html.escape(main))   # 제목 속 번호도 빨간 동그라미
+            return f'<p class="h2">{badge}<span class="ht">{ht}</span>{subh}</p>'
         inner = []
         for r in p.runs:
             if r.kind == "t":
@@ -402,6 +403,18 @@ class Doc:
                     if a > 1 and ws[a - 2][4] == "▼":
                         r |= pymupdf.Rect(ws[a - 2][:4])
                     doc[pno].insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(r.x0 - 3, r.y0 - 2, r.x1 + 3, r.y1 + 2), "page": int(m.group(1)), "to": pymupdf.Point(0, 0)})
+        # '↩ 돌아가기 5쪽 · 9쪽' : 쪽 번호마다 그 쪽으로
+        for pno in range(1, len(doc)):
+            ws = doc[pno].get_text("words")
+            for a, w in enumerate(ws):
+                if w[4] != "돌아가기":
+                    continue
+                for v in ws[a + 1:a + 12]:
+                    if abs(v[1] - w[1]) > 3:
+                        break
+                    m = re.fullmatch(r"(\d+)쪽", v[4])
+                    if m and int(m.group(1)) < len(doc):
+                        doc[pno].insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(v[0] - 3, v[1] - 2, v[2] + 3, v[3] + 2), "page": int(m.group(1)), "to": pymupdf.Point(0, 0)})
         # 앱 주소·QR 코드는 누르면 앱 홈페이지로
         APP = "https://tm-cbm.lovable.app"
         for pg in doc:
@@ -520,10 +533,30 @@ const secmap = {};
 document.querySelectorAll('section.page').forEach((pg, n) => pg.querySelectorAll('p.h2 .hn').forEach(h => { const k = h.textContent.trim(); if (k && !(k in secmap)) secmap[k] = n + 1; }));
 document.querySelectorAll('section.page').forEach((pg, n) => pg.querySelectorAll('table.part').forEach(t => { const m = t.innerText.match(/PART\s*(\d)/); if (m && !(('PART ' + m[1]) in secmap)) secmap['PART ' + m[1]] = n + 1; }));
 const norm = s => (s || '').replace(/\s+/g, ' ').trim();
+const anchorEl = {};
 document.querySelectorAll('span.pn').forEach(pn => { const k = pn.dataset.p; if (!k || k[0] !== '@' || k in secmap) return;
   const want = norm(k.slice(1));
   document.querySelectorAll('section.page').forEach((pg, n) => { if (k in secmap) return;
-    if ([...pg.querySelectorAll('p.lab, p.h2, td')].some(e => norm(e.innerText).startsWith(want))) secmap[k] = n + 1; }); });
+    const el = [...pg.querySelectorAll('p.lab, p.h2, td')].find(e => norm(e.innerText).startsWith(want));
+    if (el) { secmap[k] = n + 1; anchorEl[k] = el; } }); });
 window.__secmap = secmap;
+// '돌아가기' : 다른 쪽에서 (2-1)·'▼ 자세히 N쪽'으로 이 제목을 가리키면, 제목 옆에 그 쪽들로 돌아가는 버튼(어느 PDF 뷰어에서나 되는 일반 링크)
+const pages = [...document.querySelectorAll('section.page')];
+const pageOf = el => pages.indexOf(el.closest('section.page')) + 1;
+const tocPage = pages.findIndex(pg => pg.innerText.includes('절 · 쪽')) + 1;
+const from = {};
+const add = (k, n) => { if (!k || n === tocPage) return; (from[k] = from[k] || new Set()).add(n); };
+document.querySelectorAll('section.page .ref').forEach(r => r.textContent.replace(/[()]/g, '').split(/[·,]\s?/).forEach(k => add(k.trim(), pageOf(r))));
+document.querySelectorAll('section.page .more span.pn').forEach(pn => add(pn.dataset.p, pageOf(pn)));
+Object.entries(from).forEach(([k, set]) => {
+  let el = anchorEl[k];
+  if (!el) el = [...document.querySelectorAll('p.h2')].find(h => norm(h.querySelector('.hn')?.textContent) === k);
+  if (!el) return;
+  const here = pageOf(el); const back = [...set].filter(n => n !== here).sort((a, b) => a - b);
+  if (!back.length) return;
+  const b = document.createElement('span'); b.className = 'back';
+  b.textContent = '↩ 돌아가기 ' + back.map(n => n + '쪽').join(' · ');
+  if (el.tagName === 'TD') el.appendChild(b); else el.appendChild(b);
+});
 window.__layout = report;
 """ % {"H": PAGE_H, "G": GAP_MIN}

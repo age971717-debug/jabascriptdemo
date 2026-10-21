@@ -262,3 +262,16 @@ p.lab, p.lab.hang, p.lab.hang.hang2, p.h2, p.h2.hang, p.h2.hang.hang2 { padding-
 /* '▼ 자세히 N쪽' : 자세한 설명이 있는 쪽 안내(누르면 이동) */
 .more { display: inline-block; white-space: nowrap; margin-left: 3pt; padding: 0.2pt 5pt; border-radius: 8pt; background: #E3EDFB;
   color: #1F5FBF !important; font-weight: 700; font-size: 0.86em; text-indent: 0; border: 0.6pt solid #9DB9E6; }
+/* '↩ 돌아가기 N쪽' : 이 제목을 가리킨 쪽으로 돌아가는 버튼(누르면 이동) */
+.back { margin-left: auto; align-self: center; white-space: nowrap; font-family: Pretendard, sans-serif; font-size: 8.5pt !important;
+  font-weight: 700; color: #1F5FBF !important; background: #EEF3FB; border: 0.6pt solid #9DB9E6; border-radius: 8pt; padding: 0.6pt 6pt;
+  text-indent: 0; letter-spacing: 0; }
+p.lab { position: relative; }
+p.lab .back { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+td .back { display: inline-block; margin: 2pt 0 0; }
+/* 이름표 안의 돌아가기 버튼은 이름표 모양을 따르지 않고 같은 연한 파란 버튼으로 */
+p.lab span.back { font-size: 8.5pt !important; padding: 0.6pt 6pt !important; border-radius: 8pt !important; background: #EEF3FB !important;
+  color: #1F5FBF !important; border: 0.6pt solid #9DB9E6; line-height: 1.4; }
+p.lab span.back::before { content: none !important; }
+/* 소제목 속 번호(⑧ TM 칸을 누르면 등)는 제목 글자에 맞게 크게 */
+p.h2 b.cn::before { width: 16pt; height: 16pt; line-height: 16pt; font-size: 11pt; }
