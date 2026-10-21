@@ -1,6 +1,6 @@
 """hx.Doc 과 같은 호출 방식으로 HTML을 만들고 Chromium으로 PDF를 뽑는다(한글 조판에 기대지 않는 최종 PDF용).
 가이드 스크립트는 그대로 두고 이 모듈을 먼저 불러오게 하면 된다."""
-import base64, html, json, os, re, subprocess
+import base64, html, json, os, re, subprocess, sys
 
 MM = 7200 / 25.4
 FONT_DIR = os.path.join(os.path.dirname(__file__), "..", "fonts", "pt", "package", "dist", "public", "static")
@@ -254,12 +254,20 @@ class Doc:
         for c in out:
             follows_pic = merged and 'img class="sc"' in merged[-1]
             is_nums = c.startswith('<table class="t nums') or bool(re.match(r'^<table class="t"[^>]*><colgroup>.*?</colgroup><tr><td[^>]*><p[^>]*><span[^>]*><b class="cn">', c))
-            is_note = (c.startswith('<p') or c.startswith('<div class="keep"><p')) and re.search(r'>- ', c[:700]) and not re.search(r'>- (<[^>]+>)*(현황|분석) 탭', c[:900])
+            is_note = (c.startswith('<p') or (c.startswith('<div class="keep"><p') and 'class="h2"' not in c[:60])) and re.search(r'>- ', c[:700]) and not re.search(r'>- (<[^>]+>)*(현황|분석) 탭', c[:900])
             is_rep = c.startswith('<table') and '보고서 항목' in c[:3000]
             if follows_pic and (is_nums or is_note or is_rep):
                 merged[-1] = '<div class="keep">' + merged[-1] + c + "</div>"
             else:
                 merged.append(c)
+        # 소제목 + 한 줄 설명뿐인 묶음은 다음 덩어리(사진·표)와 같은 쪽에
+        tmp = []
+        for c in merged:
+            if tmp and tmp[-1].startswith('<div class="keep"><p class="h2"') and "<table" not in tmp[-1] and "<img" not in tmp[-1]:
+                tmp[-1] = '<div class="keep">' + tmp[-1] + c + "</div>"
+            else:
+                tmp.append(c)
+        merged = tmp
         # 짧은 안내 줄(- 현황 탭 : … 등)은 바로 뒤 표와, 표 사이의 한 줄 메모는 앞뒤 표와 같은 쪽에
         plain = lambda c: re.sub(r"<[^>]+>", "", c)
         is_p = lambda c: c.startswith("<p") and 'class="h2"' not in c[:40] and len(plain(c)) < 90
@@ -318,15 +326,16 @@ class Doc:
         import json
         m = json.loads(subprocess.run(["node", MEASURE_JS, base + "_measure.html"], check=True, capture_output=True, text=True).stdout)
         # ② 쪽 나누기: 그림은 0.82~1.35배로 줄이고 늘릴 수 있다고 보고 순서대로 채움, 장 띠는 쪽 아래 40%에 오지 않게
-        H, SMIN, SMAX = PAGE_H, 0.72, 1.25
+        H, SMIN, SMAX = PAGE_H, 1.0, 1.25
         n = len(m)
         def fits(i, j):   # 덩어리 i..j-1 을 한 쪽에
             if any(k in forced for k in range(i + 1, j)):
                 return None
-            for q in range(i, j):   # 장 띠 뒤로 두 덩어리는 같은 쪽에
-                if is_part[q] and q + 2 > j - 1 and not (j == n or j in forced):
+            for q in range(i, j):   # 장 띠 뒤로 두 덩어리는 같은 쪽에(둘이 한 쪽에 안 들어가면 한 덩어리)
+                need = 2 if q + 2 < n and m[q][0] + m[q + 1][0] + m[q + 2][0] + 2 * GAP_MIN <= H else 1
+                if is_part[q] and q + need > j - 1 and not (j == n or j in forced):
                     return None
-            lo = sum(m[k][1] for k in range(i, j)) + GAP_MIN * (j - i - 1)
+            lo = sum(m[k][0] for k in range(i, j)) + GAP_MIN * (j - i - 1)   # 사진은 기본 크기보다 줄이지 않음
             if lo > H and j - i > 1:
                 return None
             hi = sum(m[k][2] for k in range(i, j)) + (GAP_MIN + 2.3) * (j - i - 1)
@@ -343,6 +352,8 @@ class Doc:
                 c = best[i] + (0 if last and w < H * 0.5 else w * w) + 20000
                 if c < best[j]:
                     best[j], prev[j] = c, i
+        bad = [j for j in range(n + 1) if best[j] == INF]
+        if best[n] == INF: print("DP-INF", n, bad, [(k, round(m[k][0]), is_part[k], k in forced, re.sub("<[^>]+>", "", chunks[k])[:40]) for k in range(n)], file=sys.stderr)
         pages, j = [], n
         while j > 0:
             pages.insert(0, list(range(prev[j], j))); j = prev[j]
@@ -370,7 +381,7 @@ class Doc:
                 if k.startswith("PART"):
                     pats = (k,)
                 for r in [x for pat in pats for x in pg.search_for(pat)]:
-                    if target + 0 != pno:
+                    if True:
                         pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": target, "to": pymupdf.Point(0, 0)})
         # 앱 주소·QR 코드는 누르면 앱 홈페이지로
         APP = "https://tm-cbm.lovable.app"

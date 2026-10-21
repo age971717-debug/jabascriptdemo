@@ -9,16 +9,20 @@ def draw(name, out, crop=None, only=None):
     cx0, cy0, cw, ch = crop or d.get("clip") or (0, 0, im.width / S, im.height / S)
     im = im.crop(tuple(round(v * S) for v in (cx0, cy0, cx0 + cw, cy0 + ch)))
     M = 30  # 왼쪽 여백(css px)
-    can = Image.new("RGB", (im.width + M * S, im.height), BG); can.paste(im, (M * S, 0))
+    T = 8  # 위·아래 여백(상자가 화면 끝에서 잘리지 않게)
+    can = Image.new("RGB", (im.width + M * S, im.height + 2 * T * S), BG); can.paste(im, (M * S, T * S))
     g = ImageDraw.Draw(can); r = 11 * S; f = ImageFont.truetype(FONT, 14 * S)
     for n, bx in d["boxes"]:
         if not bx or (only and n not in only): continue
         x, y, w, h = bx; x -= cx0; y -= cy0
         if y + h < 0 or y > ch: continue
-        if y + h > ch - 5: h = ch - 5 - y   # 잘린 쪽은 사진 끝에서 닫음
+        if y + h > ch + 5: h = ch + 5 - y   # 잘린 쪽은 사진 끝 바로 밖에서 닫음
+        y += T
         X0, Y0 = (x - 3 + M) * S, (y - 3) * S; X1, Y1 = (x + w + 3 + M) * S, (y + h + 3) * S
         g.rounded_rectangle((X0, Y0, X1, Y1), radius=6 * S, outline=RED, width=round(2.4 * S))
         bx_ = max(r + S, X0 - r - 2 * S); by_ = max(r + S, Y0 + r)
+        if n in d.get("below", []):   # 붙어 있는 버튼은 번호를 상자 아래 가운데에
+            bx_ = (X0 + X1) / 2; by_ = Y1 + r + 1 * S
         g.ellipse((bx_ - r, by_ - r, bx_ + r, by_ + r), fill=RED, outline=(255, 255, 255), width=2 * S)
         t = str(n); tw = g.textlength(t, font=f); g.text((bx_ - tw / 2, by_ - f.size * 0.6), t, font=f, fill=(255, 255, 255))
     can.save(out); print(out, can.size)

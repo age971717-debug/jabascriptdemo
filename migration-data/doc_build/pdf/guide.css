@@ -214,3 +214,4 @@ p.lab b.cn::before { content: attr(data-n); display: inline-block; width: 15pt; 
 p.lab .ref { color: #fff !important; text-decoration-color: #fff; }
 td[style*="background:#1F3864"] .ref, td[style*="background:#2E75B6"] .ref { color: #fff !important; }
 table.t td { white-space: normal; }
+.ref { white-space: nowrap; }
