@@ -264,7 +264,7 @@ class Doc:
         # 소제목 + 한 줄 설명뿐인 묶음은 다음 덩어리(사진·표)와 같은 쪽에
         tmp = []
         for c in merged:
-            if tmp and tmp[-1].startswith('<div class="keep"><p class="h2"') and "<table" not in tmp[-1] and "<img" not in tmp[-1]:
+            if tmp and re.match(r'^(<div class="keep">)+<p class="h2"', tmp[-1]) and "<table" not in tmp[-1] and "<img" not in tmp[-1]:
                 tmp[-1] = '<div class="keep">' + tmp[-1] + c + "</div>"
             else:
                 tmp.append(c)
