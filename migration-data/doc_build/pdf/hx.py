@@ -118,7 +118,9 @@ class Doc:
         plain = not s.get("color") and s.get("font") != "HY헤드라인M"
         if plain and s.get("bold"):
             s = {**s, "color": "#1F3864"}   # 본문 굵은 글씨 = 남색 강조
-        css = [f"font-size:{s.get('size', 10)}pt"]
+        sz = s.get('size', 10)
+        sz = round(sz * 1.12, 2) if sz < 12 else sz   # 본문 글씨 12% 키움(사진 확대에 맞춤)
+        css = [f"font-size:{sz}pt"]
         if s.get("color"):
             css.append(f"color:{s['color']}")
         if s.get("font") == "HY헤드라인M":
@@ -148,7 +150,7 @@ class Doc:
             css.append(f"margin-top:{f['spacing_before_pt']}pt")
         if f.get("spacing_after_pt"):
             css.append(f"margin-bottom:{f['spacing_after_pt']}pt")
-        cls = ""
+        cls = f' class="{f["cls"]}"' if f.get("cls") else ""
         if f.get("bottom_border"):
             cls = ' class="h2"'
             raw = "".join(r.a[0] for r in p.runs if r.kind == "t")
@@ -246,7 +248,29 @@ class Doc:
                 merged[-1] = '<div class="keep">' + merged[-1] + c + "</div>"
             else:
                 merged.append(c)
-        return merged
+        # 짧은 안내 줄(- 현황 탭 : … 등)은 바로 뒤 표와, 표 사이의 한 줄 메모는 앞뒤 표와 같은 쪽에
+        plain = lambda c: re.sub(r"<[^>]+>", "", c)
+        is_p = lambda c: c.startswith("<p") and 'class="h2"' not in c[:40] and len(plain(c)) < 90
+        is_tbl = lambda c: c.startswith("<table") or (c.startswith('<div class="keep"><table') and 'class="h2"' not in c)
+        # 연속된 안내 줄(- …)은 한 덩어리로, 소제목 묶음 끝이 안내 줄이면 뒤 안내 줄도 붙임
+        tmp = []
+        for c in merged:
+            if tmp and is_p(c) and re.search(r">- ", c[:300]) and (is_p(tmp[-1]) or (tmp[-1].startswith('<div class="keep"><p class="h2"') and tmp[-1].endswith("</p></div>"))):
+                prev_ = tmp.pop()
+                tmp.append(prev_[:-6] + c + "</div>" if prev_.endswith("</p></div>") else '<div class="keep">' + prev_ + c + "</div>")
+            else:
+                tmp.append(c)
+        merged = tmp
+        out2, k = [], 0
+        while k < len(merged):
+            c = merged[k]
+            if is_p(c) and k + 1 < len(merged) and is_tbl(merged[k + 1]):
+                grp = c + merged[k + 1]
+                if out2 and is_tbl(out2[-1]) and not c.lstrip("<p").startswith(">-") and not re.search(r">- ", c[:300]):
+                    grp = out2.pop() + grp
+                out2.append('<div class="keep">' + grp + "</div>"); k += 2; continue
+            out2.append(c); k += 1
+        return out2
 
     def save(self, path):
         cover, body, seen = [], [], False
@@ -281,7 +305,7 @@ class Doc:
         import json
         m = json.loads(subprocess.run(["node", MEASURE_JS, base + "_measure.html"], check=True, capture_output=True, text=True).stdout)
         # ② 쪽 나누기: 그림은 0.82~1.35배로 줄이고 늘릴 수 있다고 보고 순서대로 채움, 장 띠는 쪽 아래 40%에 오지 않게
-        H, SMIN, SMAX = PAGE_H, 0.88, 1.4
+        H, SMIN, SMAX = PAGE_H, 0.8, 1.4
         n = len(m)
         def fits(i, j):   # 덩어리 i..j-1 을 한 쪽에
             fx = sum(m[k][0] - m[k][1] for k in range(i, j)); im = sum(m[k][1] for k in range(i, j))
@@ -293,7 +317,7 @@ class Doc:
             lo = fx + im * SMIN + GAP_MIN * (j - i - 1)
             if lo > H and j - i > 1:
                 return None
-            hi = fx + im * SMAX + GAP_MIN * (j - i - 1) + 6 * (j - i - 1)   # 간격은 덩어리당 최대 6mm 더 벌릴 수 있음
+            hi = fx + im * SMAX + GAP_MIN * (j - i - 1) + 2.3 * (j - i - 1)   # 간격은 덩어리당 최대 2.3mm만 더 벌림(빽빽하게)
             waste = max(0.0, H - hi)
             return waste
         INF = float("inf"); best = [INF] * (n + 1); prev = [0] * (n + 1); best[0] = 0
@@ -305,7 +329,7 @@ class Doc:
                         break
                     continue
                 last = (j == n)
-                c = best[i] + (0 if last and w < H * 0.5 else w * w) + 900
+                c = best[i] + (0 if last and w < H * 0.5 else w * w) + 2500
                 if c < best[j]:
                     best[j], prev[j] = c, i
         pages, j = [], n
@@ -331,7 +355,7 @@ GAP_MIN = 2.2                 # 덩어리 사이 최소 간격(mm)
 MEASURE_JS = os.path.join(os.path.dirname(__file__), "measure.cjs")
 FILL_JS = """
 // 쪽마다: 그림 배율을 맞춰 높이를 채우고, 남는 공간은 덩어리 사이에 고르게 나눔
-const MM = 96 / 25.4, H = %(H)s * MM, GMIN = %(G)s * MM, GMAX = 9 * MM;
+const MM = 96 / 25.4, H = %(H)s * MM, GMIN = %(G)s * MM, GMAX = 4.5 * MM;
 const report = [];
 // 외톨이 줄 없애기: 마지막 줄에 글자가 조금만 남는 문단은 자간을 아주 조금 줄여 한 줄 덜 쓰게
 const lines = el => { const r = document.createRange(); r.selectNodeContents(el);
@@ -354,13 +378,13 @@ document.querySelectorAll('section.page').forEach((pg, n) => {
     const tds = tb ? tb.querySelectorAll('td') : [];
     if (tb && tb.classList.contains('pics') && td === tds[0] && tb.querySelectorAll('col').length === 2 && tds[1] && !tds[1].querySelector('img')) {
       const cols = tb.querySelectorAll('col'); cols[0].style.width = Math.min(w + 8, 120) + 'mm'; cols[1].style.width = 'auto'; } });
-  let lo = 0.85, hi = 1.4, s = 1;
+  let lo = 0.78, hi = 1.4, s = 1;
   if (imgs.length) { setS(hi); if (used() > H) { for (let i = 0; i < 18; i++) { s = (lo + hi) / 2; setS(s); if (used() > H) hi = s; else lo = s; } s = lo; setS(s); } else s = hi; }
   let free = H - used();
   if (free > blks.length * GMAX) {
     const tds = [...pg.querySelectorAll('table.t:not(.part):not(.chapter) td:not(.img)')];
     const base = tds.map(td => parseFloat(getComputedStyle(td).paddingTop));
-    for (let add = 0.5; add <= 8; add += 0.5) {
+    for (let add = 0.5; add <= 2; add += 0.5) {
       tds.forEach((td, i) => { td.style.paddingTop = td.style.paddingBottom = (base[i] + add) + 'px'; });
       if (H - used() < blks.length * GMAX * 0.6) break;
     }
