@@ -132,8 +132,9 @@ class Doc:
             # 등급 이름은 등급 색으로, 번호(①②…)는 화면 표시와 같은 빨강, ⇒ 는 파랑
             t = re.sub(r"(?<![가-힣])(긴급|주의|관찰|정상|예비품|불용대기)(?![가-힣]*(?:사항|하세요|깊))",
                        lambda m: f'<b class="g g{["긴급","주의","관찰","정상","예비품","불용대기"].index(m.group(1))}">{m.group(1)}</b>', t)
-            t = re.sub(r"([①-⑮])", lambda m: f'<b class="cn" data-n="{ord(m.group(1)) - 0x245F}">{m.group(1)}</b>', t)
             t = t.replace("⇒", '<span class="ar">⇒</span>')
+        if s.get("font") != "HY헤드라인M":   # 번호(①②…)는 어디서나 빨간 동그라미(번호 칸 포함)
+            t = re.sub(r"([①-⑮])", lambda m: f'<b class="cn" data-n="{ord(m.group(1)) - 0x245F}">{m.group(1)}</b>', t)
         if s.get("color") == "#1F4E79" and (text.startswith("TIP  ") or text.startswith("주의  ")):
             lead, rest = text.split("  ", 1)
             return f'<span class="badge{" warn" if lead == "주의" else ""}">{lead}</span>' + self._span(rest, cs)
@@ -201,7 +202,7 @@ class Doc:
         t0 = "".join(r.a[0] for p in t.grid[0][0].paragraphs for r in p.runs if r.kind == "t").strip()
         if t0[:1] and "①" <= t0[:1] <= "⑮":
             kind += " nums"
-        if any("".join(r.a[0] for p in c.paragraphs for r in p.runs if r.kind == "t").strip() == "⇒" for row in t.grid for c in row):
+        if t.cols >= 5 and any("".join(r.a[0] for p in c.paragraphs for r in p.runs if r.kind == "t").strip() == "⇒" for row in t.grid for c in row):
             kind += " flow"
         rows = []
         for row in t.grid:
@@ -253,8 +254,8 @@ class Doc:
         merged = []
         for c in out:
             follows_pic = merged and 'img class="sc"' in merged[-1]
-            is_nums = c.startswith('<table class="t nums') or bool(re.match(r'^<table class="t"[^>]*><colgroup>.*?</colgroup><tr><td[^>]*><p[^>]*><span[^>]*><b class="cn">', c))
-            is_note = (c.startswith('<p') or (c.startswith('<div class="keep"><p') and 'class="h2"' not in c[:60])) and re.search(r'>- ', c[:700]) and not re.search(r'>- (<[^>]+>)*(현황|분석) 탭', c[:900])
+            is_nums = c.startswith('<table class="t nums') or c.startswith('<div class="keep"><table class="t nums') or bool(re.match(r'^<table class="t"[^>]*><colgroup>.*?</colgroup><tr><td[^>]*><p[^>]*><span[^>]*><b class="cn">', c))
+            is_note = bool(re.match(r'^<p[^>]*><span[^>]*><b class="cn"', c)) or (c.startswith('<p') or (c.startswith('<div class="keep"><p') and 'class="h2"' not in c[:60])) and re.search(r'>- ', c[:700]) and not re.search(r'>- (<[^>]+>)*(현황|분석) 탭', c[:900])
             is_rep = c.startswith('<table') and '보고서 항목' in c[:3000]
             if follows_pic and (is_nums or is_note or is_rep):
                 merged[-1] = '<div class="keep">' + merged[-1] + c + "</div>"
@@ -307,7 +308,7 @@ class Doc:
         head = f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>{css}</style></head>'
         path = os.path.abspath(path); base = os.path.splitext(path)[0]
         with open(base + "_cover.html", "w", encoding="utf-8") as f:
-            f.write(head + '<body class="cover"><div class="band"></div><div class="coverwrap">' + self._blocks_html(cover)
+            f.write(head + '<body class="cover">' + COVER_BAND + '<div class="coverwrap">' + self._blocks_html(cover)
                     + '</div><div class="coverfoot"><span>AX 리더 팀 프로젝트 · 9팀</span><span>2026. 10.</span></div></body></html>')
         chunks, forced = [], set()
         seg = []
@@ -398,11 +399,41 @@ class Doc:
                 if k in secmap:
                     for r in pg.search_for(label):
                         pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(r.x0 - 30, r.y0 - 8, r.x1 + 30, r.y1 + 8), "page": secmap[k], "to": pymupdf.Point(0, 0)})
+        # 머리말 버튼: ◀ 뒤로 = 이동하기 전 쪽(GoBack), ⌂ 목차 = 본문 1쪽(가이드 구성)
+        def hit(pg, label):
+            rs = [r for r in pg.search_for(label) if r.y1 < 60]
+            if not rs:
+                return None
+            u = rs[0]
+            for r in rs[1:]:
+                u |= r
+            return pymupdf.Rect(u.x0 - 5, u.y0 - 3, u.x1 + 5, u.y1 + 3)
+        for pno in range(1, len(doc)):
+            pg = doc[pno]
+            r = hit(pg, "◀ 뒤로")
+            if r:
+                pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": 0, "to": pymupdf.Point(0, 0)})
+            r = hit(pg, "⌂ 목차")
+            if r:
+                pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": 1, "to": pymupdf.Point(0, 0)})
+        cover_ref = f"/D [ {doc[0].xref} 0 R"
+        for pno in range(1, len(doc)):
+            for x in re.findall(r"(\d+) 0 R", doc.xref_get_key(doc[pno].xref, "Annots")[1]):
+                o = doc.xref_object(int(x))
+                if cover_ref in o:   # 표지로 가는 머리말 링크 = '뒤로'
+                    doc.xref_set_key(int(x), "A", "<</S/Named/N/GoBack>>")
         doc.set_metadata({"title": "TM-CBM 사용 가이드", "author": "9팀", "subject": "견인전동기(TM) 진단·수선의뢰 관리 앱 사용 가이드"})
         doc.save(path, deflate=True, garbage=3); os.remove(path + ".cover.pdf"); os.remove(path + ".body.pdf")
         print(self.layout)
         return True, ()
 
+
+COVER_BAND = """<div class="band"><div class="bandgrid"></div><svg class="bandart" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" fill="none">
+<g stroke="#ffffff" stroke-opacity=".16"><circle cx="150" cy="150" r="138" stroke-width="2"/><circle cx="150" cy="150" r="112" stroke-width="10" stroke-dasharray="6 9"/>
+<circle cx="150" cy="150" r="84" stroke-width="2"/><circle cx="150" cy="150" r="58" stroke-width="16" stroke-opacity=".10"/><circle cx="150" cy="150" r="26" stroke-width="2"/>
+<path d="M150 12V60M150 240V288M12 150H60M240 150H288" stroke-width="2"/></g>
+<g transform="translate(96 108)"><rect x="0" y="52" width="18" height="32" rx="3" fill="#6BBF59" fill-opacity=".9"/><rect x="28" y="36" width="18" height="48" rx="3" fill="#F2C94C" fill-opacity=".9"/>
+<rect x="56" y="18" width="18" height="66" rx="3" fill="#F2994A" fill-opacity=".9"/><rect x="84" y="0" width="18" height="84" rx="3" fill="#EB5757" fill-opacity=".95"/></g></svg><div class="kicker"><i></i>USER GUIDE · 현장 사용 설명서</div><div class="chips"><span>위험 등급 자동 판정</span><span>말로 하는 수선 기록</span><span>정비 문서 AI 검색</span></div></div>"""
 
 GRADE_FILL = {"긴급": "#F8D0D0", "주의": "#FBDDC6", "관찰": "#FFF0B8", "정상": "#D7EDCB"}
 PAGE_H = 297 - 19 - 16 - 2   # 본문 높이(mm), 2mm 여유
