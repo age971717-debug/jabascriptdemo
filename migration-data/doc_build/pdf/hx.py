@@ -307,13 +307,14 @@ class Doc:
             else:
                 seg.append((kind, b))
         is_part = ['class="t part"' in c or 'class="t chapter"' in c for c in chunks]
+        ax = next((k for k, c in enumerate(chunks) if "APPENDIX" in c), 10 ** 9)   # 부록부터는 촘촘한 표
         # ① 덩어리 높이 재기
         with open(base + "_measure.html", "w", encoding="utf-8") as f:
-            f.write(head + '<style>body{width:176mm}</style><body><div style="width:176mm">' + "".join(f'<div class="blk">{c}</div>' for c in chunks) + f"</div><script>{SETSCALE_JS % {}}</script></body></html>")
+            f.write(head + '<style>body{width:176mm}</style><body><div style="width:176mm">' + "".join(f'<div class="blk{" appx" if k >= ax else ""}">{c}</div>' for k, c in enumerate(chunks)) + f"</div><script>{SETSCALE_JS % {}}</script></body></html>")
         import json
         m = json.loads(subprocess.run(["node", MEASURE_JS, base + "_measure.html"], check=True, capture_output=True, text=True).stdout)
         # ② 쪽 나누기: 그림은 0.82~1.35배로 줄이고 늘릴 수 있다고 보고 순서대로 채움, 장 띠는 쪽 아래 40%에 오지 않게
-        H, SMIN, SMAX = PAGE_H, 0.8, 1.4
+        H, SMIN, SMAX = PAGE_H, 0.72, 1.25
         n = len(m)
         def fits(i, j):   # 덩어리 i..j-1 을 한 쪽에
             if any(k in forced for k in range(i + 1, j)):
@@ -335,7 +336,7 @@ class Doc:
                         break
                     continue
                 last = (j == n)
-                c = best[i] + (0 if last and w < H * 0.5 else w * w) + 2500
+                c = best[i] + (0 if last and w < H * 0.5 else w * w) + 20000
                 if c < best[j]:
                     best[j], prev[j] = c, i
         pages, j = [], n
@@ -361,7 +362,10 @@ class Doc:
         for pno in range(1, len(doc)):
             pg = doc[pno]
             for k, target in secmap.items():
-                for r in [x for pat in (f"({k})", f"({k}·", f"·{k})", f"({k},", f"{k}(") for x in pg.search_for(pat)]:
+                pats = (f"({k})", f"({k}·", f"·{k})", f"({k},", f"{k}(")
+                if k.startswith("PART"):
+                    pats = (k,)
+                for r in [x for pat in pats for x in pg.search_for(pat)]:
                     if target + 0 != pno:
                         pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": target, "to": pymupdf.Point(0, 0)})
         # 앱 주소·QR 코드는 누르면 앱 홈페이지로
@@ -373,6 +377,12 @@ class Doc:
                 bb = pymupdf.Rect(info["bbox"])
                 if abs(bb.width - bb.height) < 3 and "QR을 찍으면" in pg.get_text("text", clip=pymupdf.Rect(bb.x1, bb.y0, pg.rect.x1, bb.y1)):
                     pg.insert_link({"kind": pymupdf.LINK_URI, "from": bb, "uri": APP})
+        for pno in range(1, len(doc)):
+            pg = doc[pno]
+            for k, label in (("2-1", "2-1 현황판"), ("2-2", "2-2 TM 리포트"), ("2-3", "2-3 수선의뢰"), ("2-4", "2-4 이력")):
+                if k in secmap:
+                    for r in pg.search_for(label):
+                        pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(r.x0 - 30, r.y0 - 8, r.x1 + 30, r.y1 + 8), "page": secmap[k], "to": pymupdf.Point(0, 0)})
         doc.set_metadata({"title": "TM-CBM 사용 가이드", "author": "9팀", "subject": "견인전동기(TM) 진단·수선의뢰 관리 앱 사용 가이드"})
         doc.save(path, deflate=True, garbage=3); os.remove(path + ".cover.pdf"); os.remove(path + ".body.pdf")
         print(self.layout)
@@ -417,7 +427,7 @@ document.querySelectorAll('section.page').forEach((pg, n) => {
   const blks = [...pg.querySelectorAll(':scope > .blk')], imgs = [...pg.querySelectorAll('img.sc')];
   const used = () => blks.reduce((a, b) => a + b.getBoundingClientRect().height, 0) + GMIN * (blks.length - 1);
   const setS = sc => setScale(imgs, sc);
-  let lo = 0.78, hi = 1.4, s = 1;
+  let lo = 0.7, hi = 1.25, s = 1;
   if (imgs.length) { setS(hi); if (used() > H) { for (let i = 0; i < 18; i++) { s = (lo + hi) / 2; setS(s); if (used() > H) hi = s; else lo = s; } s = lo; setS(s); } else s = hi; }
   let free = H - used();
   if (free > blks.length * GMAX) {
@@ -437,6 +447,7 @@ document.querySelectorAll('section.page').forEach((pg, n) => {
 });
 const secmap = {};
 document.querySelectorAll('section.page').forEach((pg, n) => pg.querySelectorAll('p.h2 .hn').forEach(h => { const k = h.textContent.trim(); if (k && !(k in secmap)) secmap[k] = n + 1; }));
+document.querySelectorAll('section.page').forEach((pg, n) => pg.querySelectorAll('table.part').forEach(t => { const m = t.innerText.match(/PART\s*(\d)/); if (m && !(('PART ' + m[1]) in secmap)) secmap['PART ' + m[1]] = n + 1; }));
 window.__secmap = secmap;
 window.__layout = report;
 """ % {"H": PAGE_H, "G": GAP_MIN}

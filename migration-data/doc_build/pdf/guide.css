@@ -187,3 +187,20 @@ p.lab b.cn { color: #FFD3CF !important; }
 p.hang { padding-left: 0.9em; text-indent: -0.9em; }
 p.hang.hang2 { padding-left: 1.3em; text-indent: -1.3em; }
 p.h2.hang { padding-left: 0; text-indent: 0; }
+/* TIP·주의 상자 내어쓰기: 둘째 줄을 라벨 뒤 글자에 맞춤(문서 전체) */
+.badge { width: 25pt; text-align: center; padding: 0.6pt 0 !important; margin-right: 6pt !important; text-indent: 0; box-sizing: border-box; }
+table.t.tipbox td p, table.t.warnbox td p { padding-left: 31pt !important; text-indent: -31pt !important; }
+/* 휴대폰(파랑)·PC(청록) 구분: 아이콘 + 색 + 사진 왼쪽 띠 */
+p.lab.phone span { background: #2E75B6 !important; }
+p.lab.pc span { background: #0F766E !important; }
+p.lab.phone span:first-child::before, p.dev.phone span:first-child::before,
+p.lab.pc span:first-child::before, p.dev.pc span:first-child::before {
+  content: ""; display: inline-block; width: 12pt; height: 12pt; margin-right: 5pt; vertical-align: -2pt; background-size: contain; background-repeat: no-repeat; }
+p.lab.phone span:first-child::before, p.dev.phone span:first-child::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><rect x='6' y='2' width='12' height='20' rx='2.5'/><path d='M11 18h2'/></svg>"); }
+p.lab.pc span:first-child::before, p.dev.pc span:first-child::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='3' width='20' height='14' rx='2'/><path d='M8 21h8M12 17v4'/></svg>"); }
+.keep:has(> p.lab.phone) > table.t { border-left: 4pt solid #2E75B6; }
+.keep:has(> p.lab.pc) > table.t { border-left: 4pt solid #0F766E; }
+p.dev span { font-size: 11pt !important; }
+.appx table.t td { padding: 2.2pt 5pt !important; }
