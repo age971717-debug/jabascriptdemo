@@ -173,3 +173,9 @@ table.t.pics p.it:first-child { margin-top: 0 !important; padding-top: 0; }
 .coverwrap table.t td.img { background: #fff; padding: 3pt !important; }
 .coverwrap p.goto { margin-top: 4pt !important; }
 .coverwrap p.goto span { display: inline-block; background: #1F3864; color: #fff !important; border-radius: 10pt; padding: 1.2pt 8pt; font-size: 9.5pt !important; }
+
+/* 표지: 의미 없는 주황 막대 제거, 바로가기 버튼 크게 */
+.band::after { display: none; }
+.coverwrap p.goto { margin-top: 6pt !important; }
+.coverwrap p.goto span { background: #E0362C !important; color: #fff !important; font-size: 10.5pt !important; font-weight: 800;
+  padding: 2.5pt 10pt !important; border-radius: 12pt; box-shadow: 0 1pt 2pt rgba(0,0,0,.18); }

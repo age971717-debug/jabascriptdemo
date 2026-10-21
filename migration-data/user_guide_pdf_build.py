@@ -170,17 +170,17 @@ D.para("TM-CBM 사용 가이드", TITLE, alignment="CENTER", spacing_after_pt=4)
 D.para("견인전동기(TM) 진단·수선의뢰 관리 앱", SUBT, alignment="CENTER", spacing_after_pt=2)
 D.para("처음 쓰는 분도 5분, 휴대폰만 있으면 됩니다.", BB, alignment="CENTER", spacing_after_pt=14)
 h2("이 앱으로 하는 일")
-t = D.table(2, 4, [17, 33, 17, 33])
+t = D.table(2, 4, [20, 30, 20, 30])
 for k, (img, head, body, sec, name) in enumerate([
         ("card_board", "어느 TM이 위험한지 한눈에", "171대를 **등급 색깔**로, 빨강 = 지금 확인", "2-1", "취부현황판"),
         ("card_report", "TM 한 대의 기록을 바로", "고장 이력·등급 이유·PDF 출력·QR 라벨", "2-2", "TM 리포트"),
         ("card_repair", "교체 기록은 현장에서 바로", "고르고, 말하고, 저장. 고장코드는 **자동 분류**", "2-3", "수선의뢰"),
         ("card_chat", "모르는 건 말로 물어보기", "\"오늘 뭐부터 점검해?\" \"절연저항 기준?\"", "3-1", "AI 어시스턴트")]):
     r, c = divmod(k, 2)
-    pic_cell(t, r, 2 * c, img, w_mm=27)
+    pic_cell(t, r, 2 * c, img, w_mm=33)
     D.cell(t, r, 2 * c + 1, [(head, BIG, dict(alignment="LEFT", line_spacing_percent=135)),
                              (body, B, dict(alignment="LEFT", line_spacing_percent=140)),
-                             (f"▶ {{{{p:{sec}}}}}쪽  {name}", BB, dict(alignment="LEFT", line_spacing_percent=140, cls="goto"))], B, BB, shade=TIPBG)
+                             (f"{{{{p:{sec}}}}}쪽 바로 가기 ▶", BB, dict(alignment="LEFT", line_spacing_percent=140, cls="goto"))], B, BB, shade=TIPBG)
 gap(6)
 h2("시작은 3단계")
 t = D.table(2, 3, [1, 1, 1])

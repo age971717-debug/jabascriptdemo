@@ -1,6 +1,6 @@
 """hx.Doc 과 같은 호출 방식으로 HTML을 만들고 Chromium으로 PDF를 뽑는다(한글 조판에 기대지 않는 최종 PDF용).
 가이드 스크립트는 그대로 두고 이 모듈을 먼저 불러오게 하면 된다."""
-import base64, html, os, re, subprocess
+import base64, html, json, os, re, subprocess
 
 MM = 7200 / 25.4
 FONT_DIR = os.path.join(os.path.dirname(__file__), "..", "fonts", "pt", "package", "dist", "public", "static")
@@ -343,6 +343,21 @@ class Doc:
         self.layout = subprocess.run(["node", PDF_JS, base + "_cover.html", base + "_body.html", path, self.header], check=True, capture_output=True, text=True).stdout
         import pymupdf
         doc = pymupdf.open(path + ".cover.pdf"); doc.insert_pdf(pymupdf.open(path + ".body.pdf"))
+        # 표지 'N쪽 바로 가기' 를 누르면 그 쪽으로 이동(본문 N쪽 = PDF N+1번째 장)
+        cov = doc[0]
+        for w in cov.get_text("words"):
+            m = re.match(r"^(\d+)쪽$", w[4])
+            if m and int(m.group(1)) + 1 <= len(doc):
+                r = pymupdf.Rect(w[0] - 10, w[1] - 4, w[2] + 70, w[3] + 4)
+                cov.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": int(m.group(1)), "to": pymupdf.Point(0, 0)})
+        # 본문 안 '(2-1)' 같은 참조도 그 절이 있는 쪽으로
+        secmap = json.loads(self.layout.strip().splitlines()[-1]) if self.layout.strip().splitlines()[-1].startswith("{") else {}
+        for pno in range(1, len(doc)):
+            pg = doc[pno]
+            for k, target in secmap.items():
+                for r in [x for pat in (f"({k})", f"({k}·", f"·{k})", f"({k},", f"{k}(") for x in pg.search_for(pat)]:
+                    if target + 0 != pno:
+                        pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": target, "to": pymupdf.Point(0, 0)})
         doc.set_metadata({"title": "TM-CBM 사용 가이드", "author": "9팀", "subject": "견인전동기(TM) 진단·수선의뢰 관리 앱 사용 가이드"})
         doc.save(path, deflate=True, garbage=3); os.remove(path + ".cover.pdf"); os.remove(path + ".body.pdf")
         print(self.layout)

@@ -22,5 +22,6 @@ const [cover, body, out, header] = process.argv.slice(2);
     headerTemplate: `<div style="${font}margin:0 17mm;padding-bottom:2mm;border-bottom:0.5pt solid #C5D0E3;display:flex;justify-content:space-between"><span>${header}</span><span>2026. 10.</span></div>`,
     footerTemplate: `<div style="${font}text-align:center">- <span class="pageNumber"></span> -</div>`,
   });
+  console.log(JSON.stringify(secmap));
   await b.close();
 })();
