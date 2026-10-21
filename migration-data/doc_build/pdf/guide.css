@@ -251,3 +251,6 @@ table.t.pics p.it { border-top: 0.8pt solid #B9C6DD; }
 table.t.part td, table.t.chapter td { border: 0 !important; }
 table.t.tipbox, table.t.warnbox { border-top: 0; border-right: 0; border-bottom: 0; }
 /* 머리말 이동 버튼 설명용(본문 표 안) */
+/* 표지 카드 사진: 칸 폭에 꼭 맞게(밖으로 튀어나오지 않게) */
+.coverwrap table.t td.img img { width: 100% !important; height: auto !important; display: block; }
+.coverwrap table.t td.img { padding: 4pt !important; vertical-align: middle; }

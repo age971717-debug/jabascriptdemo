@@ -170,14 +170,14 @@ D.para("TM-CBM 사용 가이드", TITLE, alignment="CENTER", spacing_after_pt=4)
 D.para("견인전동기(TM) 진단·수선의뢰 관리 앱", SUBT, alignment="CENTER", spacing_after_pt=2)
 D.para("처음 쓰는 분도 5분, 휴대폰만 있으면 됩니다.", BB, alignment="CENTER", spacing_after_pt=14)
 h2("이 앱으로 하는 일")
-t = D.table(2, 4, [20, 30, 20, 30])
+t = D.table(2, 4, [24, 26, 24, 26])   # 사진 칸을 넓혀 크게
 for k, (img, head, body, sec, name) in enumerate([
         ("card_board", "어느 TM이 위험한지 한눈에", "TM 171대를 **등급 색깔**로 표시, 빨간색은 지금 확인할 TM", "2-1", "취부현황판"),
         ("card_report", "TM 한 대의 기록을 바로", "고장 이력·등급 이유·PDF 출력·QR 라벨", "2-2", "TM 리포트"),
         ("card_repair", "교체 기록은 현장에서 바로", "목록에서 고르고 말로 적으면 끝, 고장코드는 **자동 분류**", "2-3", "수선의뢰"),
         ("card_chat", "모르는 건 말로 물어보기", "\"오늘 뭐부터 점검해?\" \"절연저항 기준?\"", "3-1", "AI 어시스턴트")]):
     r, c = divmod(k, 2)
-    pic_cell(t, r, 2 * c, img, w_mm=33)
+    pic_cell(t, r, 2 * c, img, w_mm=40)
     D.cell(t, r, 2 * c + 1, [(head, BIG, dict(alignment="LEFT", line_spacing_percent=135)),
                              (body, B, dict(alignment="LEFT", line_spacing_percent=140)),
                              (f"{{{{p:{sec}}}}}쪽 바로 가기 ▶", BB, dict(alignment="LEFT", line_spacing_percent=140, cls="goto"))], B, BB, shade=TIPBG)
@@ -339,6 +339,16 @@ phone("m_repair_b", [
     (10, "부착 TM 시리얼", "**새로 단 TM**. 목록은 예비품, 최근 수선완료 순"),
     (11, "사진 첨부", "카메라로 찍기 / 앨범에서 고르기, 최대 10장(자동으로 크기 줄임)"),
     (12, "수선의뢰 등록", "누르면 담당자 비밀번호 확인 후 저장")], w_mm=72)
+D.para("⑧ 고장코드 : 정해진 7가지 목록에서 고르기(직접 쓰지 않음)", BB, cls="lab", keep_with_next=True)
+t = D.table(1, 2, [76, 98])   # 고장코드 목록을 펼친 화면 + 설명
+pic_cell(t, 0, 0, "m_faultcode", w_mm=72)
+D.cell(t, 0, 1, ["- **세부 고장내용을 적으면** 그 단어로 알맞은 고장코드가 **미리 골라져 있음**(파란 줄)",
+                 "- 예 : '브러쉬홀더 절손 및 용융' ⇒ 홀더·계자코일(심각도 5)",
+                 "- 다르면 눌러서 **정해진 7가지 중에서 고르기**. 직접 쓰지 않으니 사람마다 분류가 달라지지 않음",
+                 "- 괄호 안 숫자 = 심각도(등급 계산에 쓰임, 부록 1)",
+                 "- 편성·취거 TM·취거품 상태·부착 TM도 모두 목록에서 고름",
+                 "- 휴대폰에서는 같은 7가지가 목록 창으로 열림"], B, BB, **L)
+gap(4)
 D.para("[수선의뢰 등록]을 누르면 : 앱이 아래 ①~⑤를 자동으로 차례대로 처리", BB, cls="lab", keep_with_next=True)
 wide("flow_save", [
     (1, "고장 이력 추가", "등록한 내용이 이력 화면에 새 줄로 쌓임(2-4)"),

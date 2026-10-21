@@ -16,7 +16,8 @@ def draw(name, out, crop=None, only=None):
         if not bx or (only and n not in only): continue
         x, y, w, h = bx; x -= cx0; y -= cy0
         if y + h < 0 or y > ch: continue
-        if y + h > ch + 5: h = ch + 5 - y   # 잘린 쪽은 사진 끝 바로 밖에서 닫음
+        if y + h > ch + 5:
+            print("  CLIPPED", name, n); h = ch + 5 - y   # 잘린 쪽은 사진 끝 바로 밖에서 닫음
         y += T
         X0, Y0 = (x - 3 + M) * S, (y - 3) * S; X1, Y1 = (x + w + 3 + M) * S, (y + h + 3) * S
         g.rounded_rectangle((X0, Y0, X1, Y1), radius=6 * S, outline=RED, width=round(2.4 * S))
@@ -29,7 +30,7 @@ def draw(name, out, crop=None, only=None):
 O = "annot/"
 draw("board", O + "m_board_simple.png")
 dl = J["detail"]; c = dl["clip"]; b5 = dict(dl["boxes"])[5]
-draw("detail", O + "m_detail.png", crop=(c[0], c[1], c[2], b5[1] + 150 - c[1]))
+draw("detail", O + "m_detail.png", crop=(c[0], c[1], c[2], b5[1] + b5[3] + 12 - c[1]))   # ⑤ 고장 이력 칸 전체가 보이게
 draw("report", O + "m_report.png", crop=(0, 78, 390, 720))
 rb = dict(J["repair"]["boxes"])
 draw("repair", O + "m_repair_a.png", crop=(0, 80, 390, rb[7][1] + rb[7][3] + 45 - 80), only=range(1, 8))
