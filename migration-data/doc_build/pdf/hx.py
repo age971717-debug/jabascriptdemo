@@ -127,6 +127,9 @@ class Doc:
             css.append("font-weight:800;letter-spacing:-0.01em")
         elif s.get("bold"):
             css.append("font-weight:700")
+        keep = re.findall(r"\{\{p:[^}]+\}\}", text)   # 쪽 번호 자리 안의 글(①·⇒ 등)은 꾸미지 않고 그대로 둠
+        for i, k in enumerate(keep):
+            text = text.replace(k, f"\x00{i}\x00", 1)
         t = html.escape(text)
         if plain:
             # 등급 이름은 등급 색으로, 번호(①②…)는 화면 표시와 같은 빨강, ⇒ 는 파랑
@@ -142,6 +145,9 @@ class Doc:
             # 누르면 이동하는 참조 (2-1)·(3-1·3-2)·(부록 1) : 파란 밑줄로 표시
             t = re.sub(r"\((?:\d-\d|부록 \d)(?:[·,]\s?(?:\d-\d|부록 \d))*\)", lambda m: f'<span class="ref">{m.group(0)}</span>', t)
         t = t.replace("✔", '<span class="sym">✔</span>').replace("⠿", '<span class="sym">⠿</span>').replace("☰", '<span class="sym">☰</span>')
+        for i, k in enumerate(keep):
+            t = t.replace(f"\x00{i}\x00", html.escape(k, quote=False))
+        t = re.sub(r"▼ 자세히 \{\{p:[^}]+\}\}쪽", lambda m: f'<span class="more">{m.group(0)}</span>', t)   # 자세한 설명 쪽 안내(누르면 이동)
         return f'<span style="{";".join(css)}">{t}</span>'
 
     def _para(self, p, in_cell=False):
@@ -386,6 +392,16 @@ class Doc:
                 for r in [x for pat in pats for x in pg.search_for(pat)]:
                     if True:
                         pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": target, "to": pymupdf.Point(0, 0)})
+        # '▼ 자세히 N쪽' 버튼: 누르면 그 쪽으로
+        for pno in range(1, len(doc)):
+            ws = doc[pno].get_text("words")
+            for a, w in enumerate(ws):
+                m = re.fullmatch(r"(\d+)쪽", w[4])
+                if m and a > 0 and ws[a - 1][4] == "자세히" and int(m.group(1)) < len(doc):
+                    r = pymupdf.Rect(ws[a - 1][:4]) | pymupdf.Rect(w[:4])
+                    if a > 1 and ws[a - 2][4] == "▼":
+                        r |= pymupdf.Rect(ws[a - 2][:4])
+                    doc[pno].insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(r.x0 - 3, r.y0 - 2, r.x1 + 3, r.y1 + 2), "page": int(m.group(1)), "to": pymupdf.Point(0, 0)})
         # 앱 주소·QR 코드는 누르면 앱 홈페이지로
         APP = "https://tm-cbm.lovable.app"
         for pg in doc:
@@ -503,6 +519,11 @@ document.querySelectorAll('section.page').forEach((pg, n) => {
 const secmap = {};
 document.querySelectorAll('section.page').forEach((pg, n) => pg.querySelectorAll('p.h2 .hn').forEach(h => { const k = h.textContent.trim(); if (k && !(k in secmap)) secmap[k] = n + 1; }));
 document.querySelectorAll('section.page').forEach((pg, n) => pg.querySelectorAll('table.part').forEach(t => { const m = t.innerText.match(/PART\s*(\d)/); if (m && !(('PART ' + m[1]) in secmap)) secmap['PART ' + m[1]] = n + 1; }));
+const norm = s => (s || '').replace(/\s+/g, ' ').trim();
+document.querySelectorAll('span.pn').forEach(pn => { const k = pn.dataset.p; if (!k || k[0] !== '@' || k in secmap) return;
+  const want = norm(k.slice(1));
+  document.querySelectorAll('section.page').forEach((pg, n) => { if (k in secmap) return;
+    if ([...pg.querySelectorAll('p.lab, p.h2, td')].some(e => norm(e.innerText).startsWith(want))) secmap[k] = n + 1; }); });
 window.__secmap = secmap;
 window.__layout = report;
 """ % {"H": PAGE_H, "G": GAP_MIN}

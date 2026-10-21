@@ -22,3 +22,5 @@ for i,p in enumerate(d):
     b=re.findall(r'.{0,8}(?:[\x00-\x08\x0b-\x1f\x7f-\x9f]|[가-힣][A-Za-z](?![A-Za-z])|ç).{0,8}', p.get_text())
     if b: print('BROKEN GLYPHS page', i, b[:5]); n+=1
 print('glyph check', 'OK' if not n else f'{n} pages broken')"
+# 잘림·튀어나옴 검사(번호 동그라미·사진·표가 칸이나 본문 폭 밖으로 나가면 보고)
+node pdfmod/overflow.cjs $PWD/pdfout/TM-CBM_사용가이드_body.html $PWD/pdfout/TM-CBM_사용가이드_cover.html | tail -15

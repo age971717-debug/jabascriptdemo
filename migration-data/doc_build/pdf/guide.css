@@ -257,3 +257,8 @@ table.t.tipbox, table.t.warnbox { border-top: 0; border-right: 0; border-bottom:
 /* 번호 모양 통일: 이름표·제목 안에서도 빨간 동그라미 + 흰 숫자(흰 테두리로 남색 바탕과 구분) */
 p.lab b.cn::before, p.h2 b.cn::before { background: #E0362C !important; color: #fff !important; box-shadow: 0 0 0 1.2pt #fff; }
 p.h2 b.cn { vertical-align: -2pt; margin-right: 3pt; }
+/* 이름표·소제목은 내어쓰기 하지 않음(번호로 시작해도 첫 글자가 왼쪽으로 밀려 잘리지 않게) */
+p.lab, p.lab.hang, p.lab.hang.hang2, p.h2, p.h2.hang, p.h2.hang.hang2 { padding-left: 0 !important; text-indent: 0 !important; }
+/* '▼ 자세히 N쪽' : 자세한 설명이 있는 쪽 안내(누르면 이동) */
+.more { display: inline-block; white-space: nowrap; margin-left: 3pt; padding: 0.2pt 5pt; border-radius: 8pt; background: #E3EDFB;
+  color: #1F5FBF !important; font-weight: 700; font-size: 0.86em; text-indent: 0; border: 0.6pt solid #9DB9E6; }
