@@ -358,6 +358,15 @@ class Doc:
                 for r in [x for pat in (f"({k})", f"({k}·", f"·{k})", f"({k},", f"{k}(") for x in pg.search_for(pat)]:
                     if target + 0 != pno:
                         pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": r, "page": target, "to": pymupdf.Point(0, 0)})
+        # 앱 주소·QR 코드는 누르면 앱 홈페이지로
+        APP = "https://tm-cbm.lovable.app"
+        for pg in doc:
+            for r in pg.search_for("tm-cbm.lovable.app"):
+                pg.insert_link({"kind": pymupdf.LINK_URI, "from": r, "uri": APP})
+            for info in pg.get_image_info(xrefs=True):
+                bb = pymupdf.Rect(info["bbox"])
+                if abs(bb.width - bb.height) < 3 and "QR을 찍으면" in pg.get_text("text", clip=pymupdf.Rect(bb.x1, bb.y0, pg.rect.x1, bb.y1)):
+                    pg.insert_link({"kind": pymupdf.LINK_URI, "from": bb, "uri": APP})
         doc.set_metadata({"title": "TM-CBM 사용 가이드", "author": "9팀", "subject": "견인전동기(TM) 진단·수선의뢰 관리 앱 사용 가이드"})
         doc.save(path, deflate=True, garbage=3); os.remove(path + ".cover.pdf"); os.remove(path + ".body.pdf")
         print(self.layout)
