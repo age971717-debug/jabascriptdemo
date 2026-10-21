@@ -255,7 +255,8 @@ class Doc:
             follows_pic = merged and 'img class="sc"' in merged[-1]
             is_nums = c.startswith('<table class="t nums') or bool(re.match(r'^<table class="t"[^>]*><colgroup>.*?</colgroup><tr><td[^>]*><p[^>]*><span[^>]*><b class="cn">', c))
             is_note = (c.startswith('<p') or c.startswith('<div class="keep"><p')) and re.search(r'>- ', c[:700]) and not re.search(r'>- (<[^>]+>)*(현황|분석) 탭', c[:900])
-            if follows_pic and (is_nums or is_note):
+            is_rep = c.startswith('<table') and '보고서 항목' in c[:3000]
+            if follows_pic and (is_nums or is_note or is_rep):
                 merged[-1] = '<div class="keep">' + merged[-1] + c + "</div>"
             else:
                 merged.append(c)
