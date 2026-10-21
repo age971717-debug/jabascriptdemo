@@ -96,3 +96,31 @@ table.t td.img img { max-width: 100%; object-fit: contain; }
 .coverwrap { margin-top: -56mm; }
 .coverwrap > p:nth-of-type(3) { margin-bottom: 24mm !important; }
 .band::after { bottom: 7mm; }
+
+/* ===== 강조 체계 =====
+   남색 = 핵심 용어(굵은 글씨) / 등급 색 = 긴급·주의·관찰·정상 / 빨강 원 번호 = 화면 표시 번호 / 파랑 ⇒ = 순서 */
+b.g { font-weight: 700; }
+b.g0 { color: #C00000; } b.g1 { color: #D55A00; } b.g2 { color: #A67C00; } b.g3 { color: #3B7A1E; } b.g4 { color: #2E75B6; } b.g5 { color: #6B6B6B; }
+b.cn { color: #E0362C; font-weight: 700; }
+.ar { color: #2E75B6; font-weight: 700; padding: 0 1pt; }
+td[style*="background:#1F3864"] b.cn, td[style*="background:#2E75B6"] b.cn, td[style*="background:#7030A0"] b.cn,
+td[style*="background:#C00000"] b.cn, td[style*="background:#548235"] b.cn { color: inherit; }
+.badge { display: inline-block; font-size: 7.5pt; font-weight: 800; letter-spacing: .04em; color: #fff; background: #2E75B6;
+         border-radius: 3pt; padding: 0.6pt 4.5pt; margin-right: 5pt; vertical-align: 1pt; }
+.badge.warn { background: #E08A00; }
+
+/* 소제목: 번호 배지 + 제목 + 보조 설명 */
+p.h2 { display: flex; align-items: baseline; gap: 6pt; border-bottom: 1.2pt solid #1F3864; }
+p.h2 .hn { flex: none; font-size: 9pt; font-weight: 800; color: #fff; background: #1F3864; border-radius: 3pt; padding: 1.4pt 5pt; }
+p.h2 .hn.dot { width: 5pt; height: 12pt; padding: 0; background: #2E75B6; border-radius: 1.5pt; }
+p.h2 .ht { font-size: 13.5pt; font-weight: 800; color: #1F3864; letter-spacing: -0.01em; }
+p.h2 .hs { font-size: 10.5pt; font-weight: 600; color: #2E75B6; }
+p.h2 .hs::before { content: "|"; color: #B4C3DC; margin-right: 6pt; font-weight: 400; }
+
+/* 표 머리행: 진한 남색 글씨, 첫 열은 굵게 */
+table.t tr:first-child td[style*="#DFE6F7"] span { color: #1F3864 !important; }
+table.t td { line-height: 1.45; }
+table.t td p { line-height: 1.45 !important; }
+
+/* 주요 내용(goal) 칸 */
+table.t td[style*="#DFE6F7"] { color: #1F3864; }

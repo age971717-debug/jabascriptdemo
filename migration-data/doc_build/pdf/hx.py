@@ -115,6 +115,9 @@ class Doc:
     # ------------------------------------------------------------------ HTML
     def _span(self, text, cs):
         s = self.styles.get(cs, {})
+        plain = not s.get("color") and s.get("font") != "HY헤드라인M"
+        if plain and s.get("bold"):
+            s = {**s, "color": "#1F3864"}   # 본문 굵은 글씨 = 남색 강조
         css = [f"font-size:{s.get('size', 10)}pt"]
         if s.get("color"):
             css.append(f"color:{s['color']}")
@@ -122,7 +125,17 @@ class Doc:
             css.append("font-weight:800;letter-spacing:-0.01em")
         elif s.get("bold"):
             css.append("font-weight:700")
-        t = html.escape(text).replace("✔", '<span class="sym">✔</span>').replace("⠿", '<span class="sym">⠿</span>').replace("☰", '<span class="sym">☰</span>')
+        t = html.escape(text)
+        if plain:
+            # 등급 이름은 등급 색으로, 번호(①②…)는 화면 표시와 같은 빨강, ⇒ 는 파랑
+            t = re.sub(r"(?<![가-힣])(긴급|주의|관찰|정상|예비품|불용대기)(?![가-힣]*(?:사항|하세요|깊))",
+                       lambda m: f'<b class="g g{["긴급","주의","관찰","정상","예비품","불용대기"].index(m.group(1))}">{m.group(1)}</b>', t)
+            t = re.sub(r"([①-⑮])", r'<b class="cn">\1</b>', t)
+            t = t.replace("⇒", '<span class="ar">⇒</span>')
+        if s.get("color") == "#1F4E79" and (text.startswith("TIP  ") or text.startswith("주의  ")):
+            lead, rest = text.split("  ", 1)
+            return f'<span class="badge{" warn" if lead == "주의" else ""}">{lead}</span>' + self._span(rest, cs)
+        t = t.replace("✔", '<span class="sym">✔</span>').replace("⠿", '<span class="sym">⠿</span>').replace("☰", '<span class="sym">☰</span>')
         return f'<span style="{";".join(css)}">{t}</span>'
 
     def _para(self, p, in_cell=False):
@@ -138,6 +151,13 @@ class Doc:
         cls = ""
         if f.get("bottom_border"):
             cls = ' class="h2"'
+            raw = "".join(r.a[0] for r in p.runs if r.kind == "t")
+            m = re.match(r"^((?:\d-\d|부록 \d))\.\s*(.*)$", raw)
+            num, rest = (m.group(1), m.group(2)) if m else ("", raw)
+            main, _, sub = rest.partition(" : ")
+            badge = f'<span class="hn">{html.escape(num)}</span>' if num else '<span class="hn dot"></span>'
+            subh = f'<span class="hs">{html.escape(sub)}</span>' if sub else ""
+            return f'<p class="h2">{badge}<span class="ht">{html.escape(main)}</span>{subh}</p>'
         inner = []
         for r in p.runs:
             if r.kind == "t":
@@ -282,7 +302,7 @@ document.querySelectorAll('section.page').forEach((pg, n) => {
   if (free > blks.length * GMAX) {
     const tds = [...pg.querySelectorAll('table.t:not(.part):not(.chapter) td:not(.img)')];
     const base = tds.map(td => parseFloat(getComputedStyle(td).paddingTop));
-    for (let add = 0.5; add <= 6; add += 0.5) {
+    for (let add = 0.5; add <= 8; add += 0.5) {
       tds.forEach((td, i) => { td.style.paddingTop = td.style.paddingBottom = (base[i] + add) + 'px'; });
       if (H - used() < blks.length * GMAX * 0.6) break;
     }
