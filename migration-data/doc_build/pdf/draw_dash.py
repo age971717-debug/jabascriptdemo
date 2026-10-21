@@ -1,13 +1,14 @@
 """대시보드 PC 화면 두 장(맨 위 줄·고정 요약)에 번호 상자. 번호는 종이 위 약 5mm(badge.py)."""
 import json
 from PIL import Image, ImageDraw, ImageFont
-from badge import badge_px
+from badge import badge_px, printed
 FONT = "../fonts/pt/package/dist/public/static/Pretendard-Bold.otf"
 RED = (235, 51, 42); BG = (247, 249, 252); S = 2; T = 8
 
 
 def draw(src, info, items, box, out, w_mm=170, place=None):
     x0, y0, x1, y1 = box
+    w_mm = printed(out.split("/")[-1][:-4], w_mm)
     r, fs, M = badge_px(w_mm, x1 - x0, S)
     im = Image.open(src).convert("RGB").crop((x0 * S, y0 * S, x1 * S, y1 * S))
     can = Image.new("RGB", (im.width + M * S, im.height + 2 * T * S), BG); can.paste(im, (M * S, T * S))

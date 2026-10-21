@@ -23,6 +23,7 @@ for name, w in uses:
                     seenpx[yy, xx] = True; st.append((yy, xx))
         h = max(ys) - min(ys) + 1; ww = max(xs) - min(xs) + 1
         if ww > 8 and 0.8 < h / ww < 1.25 and len(ys) / (h * ww) > 0.55: ds.append(ww)
-    mm = int(w) / im.shape[1]
+    import json; P = json.load(open('gcap/printed_mm.json'))
+    mm = P.get(name, int(w)) / im.shape[1]
     seen[name] = (round(np.median(ds) * mm, 1) if ds else None, len(ds))
 for k, v in seen.items(): print(f'{k:16s} 지름 {v[0]} mm  (동그라미 {v[1]}개)')

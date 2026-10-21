@@ -275,3 +275,10 @@ p.lab span.back { font-size: 8.5pt !important; padding: 0.6pt 6pt !important; bo
 p.lab span.back::before { content: none !important; }
 /* 소제목 속 번호(⑧ TM 칸을 누르면 등)는 제목 글자에 맞게 크게 */
 p.h2 b.cn::before { width: 16pt; height: 16pt; line-height: 16pt; font-size: 11pt; }
+/* ===== 빨간 번호 크기 통일: 어디서나 지름 16pt(약 5.6mm) = 사진 속 번호와 같은 크기 ===== */
+b.cn::before, table.t.pics p.it b.cn::before, table.t td:first-child > p:only-child > span:only-child > b.cn:only-child::before,
+p.lab b.cn::before, p.h2 b.cn::before {
+  width: 16pt !important; height: 16pt !important; line-height: 16pt !important; font-size: 11pt !important; }
+b.cn { vertical-align: -3pt; }
+p.hang.hang2:has(> span:first-child > b.cn:first-child),
+table.t.pics p.it.hang.hang2:has(> span:first-child > b.cn:first-child) { padding-left: 19pt; text-indent: -19pt; }

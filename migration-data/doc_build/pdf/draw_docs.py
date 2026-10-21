@@ -1,10 +1,10 @@
 """문서 화면(휴대폰) 카드 3장에 번호 상자. 번호는 종이 위 약 5mm(badge.py)."""
 from PIL import Image, ImageDraw, ImageFont
-from badge import badge_px
+from badge import badge_px, printed
 FONT = "../fonts/pt/package/dist/public/static/Pretendard-Bold.otf"
 RED = (235, 51, 42); BG = (247, 249, 252); S = 3; T = 8
 y0, y1 = 70, 506
-r, fs, M = badge_px(72, 390, S)
+r, fs, M = badge_px(printed("m_docs", 72), 390, S)
 im = Image.open("v12/m_docs_full.png").convert("RGB").crop((0, y0 * S, 390 * S, y1 * S))
 can = Image.new("RGB", (im.width + M * S, im.height + 2 * T * S), BG); can.paste(im, (M * S, T * S))
 g = ImageDraw.Draw(can); f = ImageFont.truetype(FONT, fs)

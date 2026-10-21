@@ -20,6 +20,31 @@ const { chromium } = require('/home/user/tm-cbm/node_modules/playwright');
         const root = e.closest('section.page') || e.closest('.coverwrap');
         if (root) { const q = root.getBoundingClientRect(); if (r.left < q.left - T || r.right > q.right + T) bad.push([name, '본문 폭 밖', e.tagName, txt(e)]); }
       });
+      const hit = (a, b) => a.left < b.right - T && b.left < a.right - T && a.top < b.bottom - T && b.top < a.bottom - T;
+      // ① 글자가 칸·상자를 넘침(가로 스크롤이 생기면 잘린 것)
+      document.querySelectorAll('section.page td, section.page p, .coverwrap td, .coverwrap p, p.lab span, .more, .back').forEach(e => {
+        if (e.scrollWidth > e.clientWidth + 1 && e.clientWidth > 0) bad.push([name, '글자가 칸을 넘침', e.tagName, txt(e)]);
+        const cs = getComputedStyle(e);
+        if (cs.overflow === 'hidden' && e.scrollHeight > e.clientHeight + 1 && e.clientHeight > 0) bad.push([name, '글자가 아래로 잘림', e.tagName, txt(e)]);
+      });
+      // ② 번호 동그라미가 다른 글자와 겹침(자기 숫자를 뺀 같은 문단의 모든 글자 상자와 비교)
+      document.querySelectorAll('b.cn').forEach(c => {
+        const p = c.closest('p, td'); if (!p) return;
+        const cr = c.getBoundingClientRect();
+        const w = document.createTreeWalker(p, NodeFilter.SHOW_TEXT); let n, found = false;
+        while (!found && (n = w.nextNode())) {
+          if (c.contains(n) || !n.nodeValue.trim()) continue;
+          const rng = document.createRange(); rng.selectNodeContents(n);
+          for (const r of rng.getClientRects()) if (r.width > 1 && hit(cr, r)) { found = true; break; }
+        }
+        if (found) bad.push([name, '번호가 글자와 겹침', c.dataset.n, txt(c)]);
+      });
+      // ③ 돌아가기·자세히 버튼이 제목·이름표 글자를 가림
+      document.querySelectorAll('.back').forEach(b => {
+        const br = b.getBoundingClientRect(); const host = b.parentElement;
+        [...host.querySelectorAll('.ht, .hs, span')].filter(x => x !== b && !b.contains(x) && !x.contains(b)).forEach(x => {
+          if (hit(br, x.getBoundingClientRect())) bad.push([name, '버튼이 글자를 가림', '', txt(host)]); });
+      });
       return bad;
     }, f.split('/').pop()));
   }

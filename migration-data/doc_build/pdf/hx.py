@@ -183,7 +183,8 @@ class Doc:
                 inner.append(self._span(r.a[0], r.a[1]))
             else:
                 item, w, h = r.a
-                inner.append(f'<img class="sc" data-w="{w:.2f}" data-h="{h:.2f}" src="{item.uri}" style="width:{w:.1f}mm;height:{h:.1f}mm">')
+                nm = getattr(item, "name", "")
+                inner.append(f'<img class="sc" data-name="{nm}" data-w="{w:.2f}" data-h="{h:.2f}" src="{item.uri}" style="width:{w:.1f}mm;height:{h:.1f}mm">')
         if not inner:
             # 빈 문단 = 간격(한글 50% 여백 문단과 같은 역할)
             gap = f.get("spacing_after_pt", 0) + f.get("spacing_before_pt", 0)

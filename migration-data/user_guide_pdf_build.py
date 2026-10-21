@@ -74,7 +74,7 @@ def box(text, kind="tip"):
 def pic_cell(t, r, c, name, w_mm=None, h_mm=None):
     im = Image.open(f"{A}/{name}.png").convert("RGB")
     b = io.BytesIO(); im.save(b, "PNG", optimize=True)
-    item = d.add_image(b.getvalue(), "png"); w, h = im.size
+    item = d.add_image(b.getvalue(), "png"); item.name = name; w, h = im.size   # name: 인쇄 폭 재기용
     if w_mm is None:
         w_mm = h_mm * w / h
     if h_mm is None:

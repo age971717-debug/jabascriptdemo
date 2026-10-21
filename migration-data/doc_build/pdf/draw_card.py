@@ -1,12 +1,12 @@
 """v12/report_card.png → 리포트 실제 화면 두 조각(①② / ③④), 각 절 제목에 번호 상자."""
 import json
 from PIL import Image, ImageDraw, ImageFont
-from badge import badge_px
+from badge import badge_px, printed
 FONT = "../fonts/pt/package/dist/public/static/Pretendard-Bold.otf"
 RED = (235, 51, 42); BG = (247, 249, 252); S = 2
 info = json.load(open("v12/report_card.json")); im = Image.open("v12/report_card.png").convert("RGB")
 W = im.width // S
-r, fs, M = badge_px(170, W, S)   # 번호: 종이 위 약 5mm
+r, fs, M = badge_px(printed("rep_card_a", 170), W, S)   # 번호: 종이 위 약 5mm
 can = Image.new("RGB", (im.width + M * S, im.height), BG); can.paste(im, (M * S, 0))
 g = ImageDraw.Draw(can); f = ImageFont.truetype(FONT, fs)
 for n, (t, x, y, w, h) in enumerate(info["hs"], 1):
