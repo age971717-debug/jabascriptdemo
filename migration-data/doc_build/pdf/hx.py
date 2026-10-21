@@ -251,7 +251,7 @@ class Doc:
         for c in out:
             follows_pic = merged and 'img class="sc"' in merged[-1]
             is_nums = c.startswith('<table class="t nums') or bool(re.match(r'^<table class="t"[^>]*><colgroup>.*?</colgroup><tr><td[^>]*><p[^>]*><span[^>]*><b class="cn">', c))
-            is_note = c.startswith('<p') and re.search(r'>- (그 밖에|본문)', c[:400])
+            is_note = (c.startswith('<p') or c.startswith('<div class="keep"><p')) and re.search(r'>- ', c[:700]) and not re.search(r'>- (<[^>]+>)*(현황|분석) 탭', c[:900])
             if follows_pic and (is_nums or is_note):
                 merged[-1] = '<div class="keep">' + merged[-1] + c + "</div>"
             else:
@@ -409,7 +409,7 @@ function setScale(imgs, s) { imgs.forEach(im => { const w = Math.min(im.dataset.
 """
 FILL_JS = SETSCALE_JS + """
 // 쪽마다: 그림 배율을 맞춰 높이를 채우고, 남는 공간은 덩어리 사이에 고르게 나눔
-const MM = 96 / 25.4, H = %(H)s * MM, GMIN = %(G)s * MM, GMAX = 4.5 * MM;
+const MM = 96 / 25.4, H = %(H)s * MM, GMIN = %(G)s * MM, GMAX = 7 * MM;
 const report = [];
 // 외톨이 줄 없애기: 마지막 줄에 글자가 조금만 남는 문단은 자간을 아주 조금 줄여 한 줄 덜 쓰게
 const lines = el => { const r = document.createRange(); r.selectNodeContents(el);
@@ -427,13 +427,13 @@ document.querySelectorAll('section.page').forEach((pg, n) => {
   const blks = [...pg.querySelectorAll(':scope > .blk')], imgs = [...pg.querySelectorAll('img.sc')];
   const used = () => blks.reduce((a, b) => a + b.getBoundingClientRect().height, 0) + GMIN * (blks.length - 1);
   const setS = sc => setScale(imgs, sc);
-  let lo = 0.7, hi = 1.25, s = 1;
+  let lo = 0.7, hi = 2.2, s = 1;
   if (imgs.length) { setS(hi); if (used() > H) { for (let i = 0; i < 18; i++) { s = (lo + hi) / 2; setS(s); if (used() > H) hi = s; else lo = s; } s = lo; setS(s); } else s = hi; }
   let free = H - used();
   if (free > blks.length * GMAX) {
     const tds = [...pg.querySelectorAll('table.t:not(.part):not(.chapter) td:not(.img)')];
     const base = tds.map(td => parseFloat(getComputedStyle(td).paddingTop));
-    for (let add = 0.5; add <= 2; add += 0.5) {
+    for (let add = 0.5; add <= 4; add += 0.5) {
       tds.forEach((td, i) => { td.style.paddingTop = td.style.paddingBottom = (base[i] + add) + 'px'; });
       if (H - used() < blks.length * GMAX * 0.6) break;
     }
