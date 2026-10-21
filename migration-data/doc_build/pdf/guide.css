@@ -204,3 +204,8 @@ p.lab.pc span:first-child::before, p.dev.pc span:first-child::before {
 .keep:has(> p.lab.pc) > table.t { border-left: 4pt solid #0F766E; }
 p.dev span { font-size: 11pt !important; }
 .appx table.t td { padding: 2.2pt 5pt !important; }
+/* 사진 위 이름표: 크게, 번호는 흰 동그라미 안 빨간 숫자 */
+p.lab span { font-size: 12pt !important; padding: 3.5pt 12pt !important; border-radius: 6pt !important; line-height: 1.5; }
+p.lab b.cn { font-size: 0 !important; display: inline-block; vertical-align: 0.5pt; margin: 0 1.5pt; }
+p.lab b.cn::before { content: attr(data-n); display: inline-block; width: 15pt; height: 15pt; line-height: 15pt; border-radius: 50%;
+  background: #fff; color: #E0362C; font-size: 10.5pt; font-weight: 800; text-align: center; }

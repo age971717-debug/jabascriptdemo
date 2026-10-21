@@ -132,7 +132,7 @@ class Doc:
             # 등급 이름은 등급 색으로, 번호(①②…)는 화면 표시와 같은 빨강, ⇒ 는 파랑
             t = re.sub(r"(?<![가-힣])(긴급|주의|관찰|정상|예비품|불용대기)(?![가-힣]*(?:사항|하세요|깊))",
                        lambda m: f'<b class="g g{["긴급","주의","관찰","정상","예비품","불용대기"].index(m.group(1))}">{m.group(1)}</b>', t)
-            t = re.sub(r"([①-⑮])", r'<b class="cn">\1</b>', t)
+            t = re.sub(r"([①-⑮])", lambda m: f'<b class="cn" data-n="{ord(m.group(1)) - 0x245F}">{m.group(1)}</b>', t)
             t = t.replace("⇒", '<span class="ar">⇒</span>')
         if s.get("color") == "#1F4E79" and (text.startswith("TIP  ") or text.startswith("주의  ")):
             lead, rest = text.split("  ", 1)
