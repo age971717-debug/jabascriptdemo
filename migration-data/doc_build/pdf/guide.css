@@ -254,3 +254,6 @@ table.t.tipbox, table.t.warnbox { border-top: 0; border-right: 0; border-bottom:
 /* 표지 카드 사진: 칸 폭에 꼭 맞게(밖으로 튀어나오지 않게) */
 .coverwrap table.t td.img img { width: 100% !important; height: auto !important; display: block; }
 .coverwrap table.t td.img { padding: 4pt !important; vertical-align: middle; }
+/* 번호 모양 통일: 이름표·제목 안에서도 빨간 동그라미 + 흰 숫자(흰 테두리로 남색 바탕과 구분) */
+p.lab b.cn::before, p.h2 b.cn::before { background: #E0362C !important; color: #fff !important; box-shadow: 0 0 0 1.2pt #fff; }
+p.h2 b.cn { vertical-align: -2pt; margin-right: 3pt; }

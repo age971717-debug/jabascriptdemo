@@ -322,9 +322,10 @@ class Doc:
         chunks = [re.sub(r"\{\{p:([^}]+)\}\}", r'<span class="pn" data-p="\1">00</span>', c) for c in chunks]
         is_part = ['class="t part"' in c or 'class="t chapter"' in c for c in chunks]
         ax = next((k for k, c in enumerate(chunks) if "APPENDIX" in c), 10 ** 9)   # 부록부터는 촘촘한 표
+        compact = {k for k, c in enumerate(chunks) if k >= ax or "관리 메뉴 한눈에" in c}   # 촘촘한 표(부록 + 관리 메뉴 표)
         # ① 덩어리 높이 재기
         with open(base + "_measure.html", "w", encoding="utf-8") as f:
-            f.write(head + '<style>body{width:176mm}</style><body><div style="width:176mm">' + "".join(f'<div class="blk{" appx" if k >= ax else ""}">{c}</div>' for k, c in enumerate(chunks)) + f"</div><script>{SETSCALE_JS % {}}</script></body></html>")
+            f.write(head + '<style>body{width:176mm}</style><body><div style="width:176mm">' + "".join(f'<div class="blk{" appx" if k in compact else ""}">{c}</div>' for k, c in enumerate(chunks)) + f"</div><script>{SETSCALE_JS % {}}</script></body></html>")
         import json
         m = json.loads(subprocess.run(["node", MEASURE_JS, base + "_measure.html"], check=True, capture_output=True, text=True).stdout)
         # ② 쪽 나누기: 그림은 0.82~1.35배로 줄이고 늘릴 수 있다고 보고 순서대로 채움, 장 띠는 쪽 아래 40%에 오지 않게
@@ -362,7 +363,7 @@ class Doc:
         appx = lambda pg: any('APPENDIX' in chunks[k] for k in pg)
         with open(base + "_body.html", "w", encoding="utf-8") as f:
             f.write(head + "<style>@page{size:A4;margin:19mm 17mm 16mm 17mm} body{width:176mm}</style><body>"
-                    + "".join(f'<section class="page{" appx" if appx(pg) else ""}">' + "".join(f'<div class="blk">{chunks[k]}</div>' for k in pg) + "</section>" for pg in pages)
+                    + "".join(f'<section class="page{" appx" if appx(pg) else ""}">' + "".join(f'<div class="blk{" appx" if k in compact else ""}">{chunks[k]}</div>' for k in pg) + "</section>" for pg in pages)
                     + f"<script>{FILL_JS}</script></body></html>")
         self.layout = subprocess.run(["node", PDF_JS, base + "_cover.html", base + "_body.html", path, self.header], check=True, capture_output=True, text=True).stdout
         import pymupdf
