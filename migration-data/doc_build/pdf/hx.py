@@ -137,6 +137,9 @@ class Doc:
         if s.get("color") == "#1F4E79" and (text.startswith("TIP  ") or text.startswith("주의  ")):
             lead, rest = text.split("  ", 1)
             return f'<span class="badge{" warn" if lead == "주의" else ""}">{lead}</span>' + self._span(rest, cs)
+        if s.get("font") != "HY헤드라인M":
+            # 누르면 이동하는 참조 (2-1)·(3-1·3-2)·(부록 1) : 파란 밑줄로 표시
+            t = re.sub(r"\((?:\d-\d|부록 \d)(?:[·,]\s?(?:\d-\d|부록 \d))*\)", lambda m: f'<span class="ref">{m.group(0)}</span>', t)
         t = t.replace("✔", '<span class="sym">✔</span>').replace("⠿", '<span class="sym">⠿</span>').replace("☰", '<span class="sym">☰</span>')
         return f'<span style="{";".join(css)}">{t}</span>'
 
@@ -379,7 +382,7 @@ class Doc:
                     pg.insert_link({"kind": pymupdf.LINK_URI, "from": bb, "uri": APP})
         for pno in range(1, len(doc)):
             pg = doc[pno]
-            for k, label in (("2-1", "2-1 현황판"), ("2-2", "2-2 TM 리포트"), ("2-3", "2-3 수선의뢰"), ("2-4", "2-4 이력")):
+            for k, label in (("2-1", "2-1 현황판 ▶"), ("2-2", "2-2 TM 리포트 ▶"), ("2-3", "2-3 수선의뢰 ▶"), ("2-4", "2-4 이력 ▶")):
                 if k in secmap:
                     for r in pg.search_for(label):
                         pg.insert_link({"kind": pymupdf.LINK_GOTO, "from": pymupdf.Rect(r.x0 - 30, r.y0 - 8, r.x1 + 30, r.y1 + 8), "page": secmap[k], "to": pymupdf.Point(0, 0)})
@@ -394,7 +397,7 @@ PAGE_H = 297 - 19 - 16 - 2   # 본문 높이(mm), 2mm 여유
 GAP_MIN = 2.2                 # 덩어리 사이 최소 간격(mm)
 MEASURE_JS = os.path.join(os.path.dirname(__file__), "measure.cjs")
 SETSCALE_JS = """
-function setScale(imgs, s) { imgs.forEach(im => { const w = Math.min(im.dataset.w * s, 168);
+function setScale(imgs, s) { imgs.forEach(im => { const w = im.dataset.w >= 165 ? 168 : Math.min(im.dataset.w * s, 168);
     const td = im.closest('td'), tb = im.closest('table'); const tds = tb ? [...tb.querySelectorAll('td')] : [];
     // 사진 왼쪽 + 설명 오른쪽(1줄 2칸) 표: 사진 칸을 사진 폭에 맞춰 넓힘, 설명 칸은 70mm 이상
     const side = tb && tds.length === 2 && td === tds[0] && !tds[1].querySelector('img') && tb.querySelectorAll('col').length === 2;

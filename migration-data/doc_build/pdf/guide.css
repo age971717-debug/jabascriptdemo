@@ -209,3 +209,8 @@ p.lab span { font-size: 12pt !important; padding: 3.5pt 12pt !important; border-
 p.lab b.cn { font-size: 0 !important; display: inline-block; vertical-align: 0.5pt; margin: 0 1.5pt; }
 p.lab b.cn::before { content: attr(data-n); display: inline-block; width: 15pt; height: 15pt; line-height: 15pt; border-radius: 50%;
   background: #fff; color: #E0362C; font-size: 10.5pt; font-weight: 800; text-align: center; }
+/* 누르면 이동하는 곳 표시 */
+.ref { color: #1F5FBF !important; text-decoration: underline; text-decoration-thickness: 0.6pt; text-underline-offset: 1.5pt; font-weight: 600; }
+p.lab .ref { color: #fff !important; text-decoration-color: #fff; }
+td[style*="background:#1F3864"] .ref, td[style*="background:#2E75B6"] .ref { color: #fff !important; }
+table.t td { white-space: normal; }
