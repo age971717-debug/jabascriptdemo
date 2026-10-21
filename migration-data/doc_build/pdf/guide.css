@@ -1,0 +1,98 @@
+@font-face { font-family: "Pretendard"; font-weight: 400; src: url("file://FONT_DIR/Pretendard-Regular.otf"); }
+@font-face { font-family: "Pretendard"; font-weight: 500; src: url("file://FONT_DIR/Pretendard-Medium.otf"); }
+@font-face { font-family: "Pretendard"; font-weight: 600; src: url("file://FONT_DIR/Pretendard-SemiBold.otf"); }
+@font-face { font-family: "Pretendard"; font-weight: 700; src: url("file://FONT_DIR/Pretendard-Bold.otf"); }
+@font-face { font-family: "Pretendard"; font-weight: 800; src: url("file://FONT_DIR/Pretendard-ExtraBold.otf"); }
+
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; font-family: "Pretendard", "DejaVu Sans", "WenQuanYi Zen Hei", sans-serif; color: #1d2430;
+       font-size: 10pt; word-break: keep-all; overflow-wrap: anywhere; }
+.sym { font-family: "DejaVu Sans", sans-serif; }
+
+/* 본문 쪽: 장(PART)마다 새 쪽 */
+section.pg { break-before: page; }
+section.pg:first-child { break-before: auto; }
+p { margin: 0; }
+
+/* 소제목 */
+p.h2 { margin: 11pt 0 5pt !important; padding: 0 0 4pt 0; border-bottom: 1.6pt solid #1F3864; }
+.keep { break-inside: avoid; }
+.keep > table { margin-top: 0; }
+
+/* 표 공통 */
+table.t { border-collapse: separate; border-spacing: 0; margin: 2pt 0 5pt; break-inside: avoid; table-layout: fixed;
+          border: 0.75pt solid #C5D0E3; border-radius: 5pt; overflow: hidden; }
+table.t td { border-right: 0.75pt solid #D9E1EF; border-bottom: 0.75pt solid #D9E1EF; padding: 4.2pt 6pt; vertical-align: middle; }
+table.t tr td:last-child { border-right: 0; }
+table.t tr:last-child td { border-bottom: 0; }
+table.t td.img { padding: 4pt; text-align: center; background: #F7F9FC; }
+table.t td.img img { border-radius: 4pt; box-shadow: 0 0.6pt 2.4pt rgba(16, 32, 64, .28); }
+
+/* 사진 + 번호 설명(phone) / 사진만(wide, pair) */
+table.t.pics td { background: #F7F9FC; }
+
+/* TIP · 주의 상자 */
+table.t.tipbox { border: 0; border-left: 3.2pt solid #2E75B6; border-radius: 0 5pt 5pt 0; }
+table.t.tipbox td { background: #EEF3FB !important; padding: 5pt 8pt; }
+table.t.warnbox { border: 0; border-left: 3.2pt solid #E08A00; border-radius: 0 5pt 5pt 0; }
+table.t.warnbox td { background: #FFF4E5 !important; padding: 5pt 8pt; }
+
+/* PART 띠 */
+table.t.part { border: 0; border-radius: 7pt; margin: 0 0 6pt; }
+table.t.part td { border: 0 !important; padding: 9pt 12pt; }
+table.t.part td:first-child { background: linear-gradient(160deg, #3F86CB, #2E75B6) !important; }
+table.t.part td:last-child { background: linear-gradient(120deg, #1F3864, #2B4C86) !important; }
+table.t.chapter { border: 0; border-radius: 7pt; }
+table.t.chapter td { padding: 10pt 14pt; background: linear-gradient(120deg, #1F3864, #2B4C86) !important; }
+
+/* 표지 */
+body.cover { height: 297mm; overflow: hidden; background: #fff; }
+.band { height: 92mm; background: linear-gradient(135deg, #1F3864 0%, #2B4C86 55%, #2E75B6 100%); position: relative; }
+.band::after { content: ""; position: absolute; left: 22mm; bottom: -1px; width: 38mm; height: 3.2mm; background: #F4B183; }
+.coverwrap { margin: -62mm 22mm 0; position: relative; }
+.coverwrap > p:nth-of-type(1) span { color: #fff !important; font-size: 34pt !important; }
+.coverwrap > p:nth-of-type(2) span { color: #DCE6F7 !important; font-size: 14pt !important; }
+.coverwrap > p:nth-of-type(3) { margin-top: 26mm !important; }
+.coverwrap > p:nth-of-type(1), .coverwrap > p:nth-of-type(2) { text-align: left !important; }
+.coverwrap > p:nth-of-type(3) { text-align: left !important; }
+
+/* 표지 다듬기: 제목·부제·한 줄 소개는 띠 안(흰 글씨), 아래는 넉넉한 간격 */
+.band { height: 108mm; }
+.coverwrap { margin: -80mm 22mm 0; }
+.coverwrap > p:nth-of-type(3) { margin: 7mm 0 34mm !important; }
+.coverwrap > p:nth-of-type(3) span { color: #F4B183 !important; font-size: 12pt !important; }
+.coverwrap p.h2 { margin-top: 16pt !important; }
+.coverwrap table.t td { padding: 6pt 8pt; }
+.coverfoot { position: absolute; left: 22mm; right: 22mm; bottom: 16mm; display: flex; justify-content: space-between;
+             font-size: 9pt; color: #7a8597; border-top: 0.6pt solid #C5D0E3; padding-top: 3mm; }
+
+/* 부록: 표를 조금 촘촘하게 */
+.appx table.t td { padding: 2.8pt 5pt; }
+.appx table.t:not(.chapter) td span { font-size: 9pt !important; }
+
+/* 계획 배치: 쪽마다 고정 높이, 덩어리는 이 안에서만 */
+section.page { height: 260mm; break-after: page; overflow: visible; }
+section.page:last-child { break-after: auto; }
+.blk { display: flow-root; }
+.blk > :first-child { margin-top: 0 !important; }
+.blk > :last-child { margin-bottom: 0 !important; }
+table.t td.img img { max-width: 100%; object-fit: contain; }
+
+/* 표지 아래 여백 채우기 */
+.coverwrap p.h2 { margin-top: 14pt !important; }
+.coverwrap table.t td { padding: 6pt 9pt !important; }
+.coverwrap table.t td.img { padding: 4pt !important; }
+.coverwrap table.t td p span { font-size: 10.5pt; }
+
+.band::after { bottom: 10mm; height: 2.4mm; }
+.coverfoot { bottom: 11mm; }
+
+.band { height: 94mm; }
+.band::after { bottom: 8mm; }
+
+.band { height: 84mm; }
+.coverwrap { margin-top: -56mm; }
+.coverwrap > p:nth-of-type(3) { margin-bottom: 24mm !important; }
+.band::after { bottom: 7mm; }

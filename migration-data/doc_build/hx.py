@@ -20,9 +20,14 @@ class Doc:
 
     def pp(self, **fmt):
         """문단 서식 id — 임시 문단에 서식을 걸어 id만 얻고 지운다(셀 안 문단에 재사용)."""
+        # 줄 간격을 안 정하면 바로 앞 문단(예: 50% 여백 문단) 값을 물려받아 한글에서 글자가 겹침 → 항상 지정
+        fmt.setdefault("line_spacing_percent", 150)
+        # 새 문단 서식은 바로 앞 문단 서식(제목 밑줄·문단 앞뒤 간격 등)을 복사해 오므로, 기본 서식(0)에서 출발하고 간격은 0으로 시작
+        fmt.setdefault("spacing_before_pt", 0); fmt.setdefault("spacing_after_pt", 0)
+        fmt.setdefault("keep_with_next", False)
         key = tuple(sorted(fmt.items()))
         if key not in self._pp:
-            p = self.d.add_paragraph("")
+            p = self.d.add_paragraph("", para_pr_id_ref="0")
             self.d.set_paragraph_format(paragraph_index=len(self.d.paragraphs) - 1, **fmt)
             self._pp[key] = p.para_pr_id_ref
             p.remove()

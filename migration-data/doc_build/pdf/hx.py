@@ -1,0 +1,298 @@
+"""hx.Doc 과 같은 호출 방식으로 HTML을 만들고 Chromium으로 PDF를 뽑는다(한글 조판에 기대지 않는 최종 PDF용).
+가이드 스크립트는 그대로 두고 이 모듈을 먼저 불러오게 하면 된다."""
+import base64, html, os, re, subprocess
+
+MM = 7200 / 25.4
+FONT_DIR = os.path.join(os.path.dirname(__file__), "..", "fonts", "pt", "package", "dist", "public", "static")
+PDF_JS = os.path.join(os.path.dirname(__file__), "pdf_guide.cjs")
+
+
+class Item:
+    def __init__(self, data):
+        self.uri = "data:image/png;base64," + base64.b64encode(data).decode()
+
+
+class Run:
+    def __init__(self, owner, kind, *a):
+        self.owner, self.kind, self.a = owner, kind, a
+
+    def remove(self):
+        self.owner.runs.remove(self)
+
+
+class Para:
+    def __init__(self, ppid=None, cs=None):
+        self.para_pr_id_ref, self.cs, self.runs = ppid, cs, []
+
+    def add_run(self, text, char_pr_id_ref=None):
+        r = Run(self, "t", text, char_pr_id_ref or self.cs); self.runs.append(r); return r
+
+    def add_picture(self, item, width, height, treat_as_char=True):
+        r = Run(self, "img", item, width / MM, height / MM); self.runs.append(r); return r
+
+
+class Cell:
+    def __init__(self):
+        self.paragraphs, self.shade = [Para()], None
+
+    def add_paragraph(self, text="", para_pr_id_ref=None, char_pr_id_ref=None):
+        p = Para(para_pr_id_ref, char_pr_id_ref); self.paragraphs.append(p)
+        if text:
+            p.add_run(text, char_pr_id_ref)
+        return p
+
+
+class Table:
+    def __init__(self, rows, cols, widths, width_mm=None):
+        self.rows, self.cols, self.width_mm = rows, cols, width_mm
+        self.widths = list(widths)
+        self.grid = [[Cell() for _ in range(cols)] for _ in range(rows)]
+
+    def cell(self, r, c):
+        return self.grid[r][c]
+
+    def set_cell_shading(self, r, c, color):
+        self.grid[r][c].shade = color
+
+
+class _Inner:
+    def __init__(self, doc):
+        self.doc = doc
+
+    def add_image(self, data, fmt="png"):
+        return Item(data)
+
+    def set_header_text(self, text, **kw):
+        self.doc.header = text
+
+    def set_page_number(self, **kw):
+        pass
+
+
+class Doc:
+    def __init__(self, margins=(20, 20, 15, 15)):
+        self.margins = margins
+        self.d = _Inner(self)
+        self.styles, self.paras, self.blocks, self.header = {}, {}, [], ""
+
+    def cs(self, **kw):
+        k = f"c{len(self.styles)}"; self.styles[k] = kw; return k
+
+    def pp(self, **fmt):
+        k = f"p{len(self.paras)}"; self.paras[k] = fmt; return k
+
+    def para(self, text, cs, bold_cs=None, target=None, **fmt):
+        ppid = self.pp(**fmt) if fmt else None
+        p = Para(ppid, cs)
+        for i, part in enumerate(text.split("**")):
+            if part:
+                p.add_run(part, bold_cs if (i % 2 and bold_cs) else cs)
+        if target is None:
+            self.blocks.append(("p", p))
+        else:
+            target.paragraphs.append(p)
+        return p
+
+    def table(self, rows, cols, widths, width_mm=None):
+        t = Table(rows, cols, widths, width_mm); self.blocks.append(("t", t)); return t
+
+    def cell(self, t, r, c, lines, cs, bold_cs=None, shade=None, **fmt):
+        cell = t.cell(r, c); first = True
+        for ln in ([lines] if isinstance(lines, str) else lines):
+            text, lcs, lfmt = (ln, cs, fmt) if isinstance(ln, str) else (ln[0], ln[1], {**fmt, **(ln[2] if len(ln) > 2 else {})})
+            if first:
+                p = cell.paragraphs[0]; p.runs.clear(); p.para_pr_id_ref = self.pp(**lfmt) if lfmt else None; p.cs = lcs
+                first = False
+            else:
+                p = Para(self.pp(**lfmt) if lfmt else None, lcs); cell.paragraphs.append(p)
+            for i, part in enumerate(text.split("**")):
+                if part:
+                    p.add_run(part, bold_cs if (i % 2 and bold_cs) else lcs)
+        if shade:
+            cell.shade = shade
+        return cell
+
+    # ------------------------------------------------------------------ HTML
+    def _span(self, text, cs):
+        s = self.styles.get(cs, {})
+        css = [f"font-size:{s.get('size', 10)}pt"]
+        if s.get("color"):
+            css.append(f"color:{s['color']}")
+        if s.get("font") == "HY헤드라인M":
+            css.append("font-weight:800;letter-spacing:-0.01em")
+        elif s.get("bold"):
+            css.append("font-weight:700")
+        t = html.escape(text).replace("✔", '<span class="sym">✔</span>').replace("⠿", '<span class="sym">⠿</span>').replace("☰", '<span class="sym">☰</span>')
+        return f'<span style="{";".join(css)}">{t}</span>'
+
+    def _para(self, p, in_cell=False):
+        f = self.paras.get(p.para_pr_id_ref, {})
+        css = []
+        al = {"CENTER": "center", "LEFT": "left", "RIGHT": "right"}.get(f.get("alignment", "LEFT" if in_cell else "JUSTIFY"), "justify")
+        css.append(f"text-align:{al}")
+        css.append(f"line-height:{max(f.get('line_spacing_percent', 150), 105) / 100 * 0.92:.2f}")
+        if f.get("spacing_before_pt"):
+            css.append(f"margin-top:{f['spacing_before_pt']}pt")
+        if f.get("spacing_after_pt"):
+            css.append(f"margin-bottom:{f['spacing_after_pt']}pt")
+        cls = ""
+        if f.get("bottom_border"):
+            cls = ' class="h2"'
+        inner = []
+        for r in p.runs:
+            if r.kind == "t":
+                inner.append(self._span(r.a[0], r.a[1]))
+            else:
+                item, w, h = r.a
+                inner.append(f'<img class="sc" data-w="{w:.2f}" data-h="{h:.2f}" src="{item.uri}" style="width:{w:.1f}mm;height:{h:.1f}mm">')
+        if not inner:
+            # 빈 문단 = 간격(한글 50% 여백 문단과 같은 역할)
+            gap = f.get("spacing_after_pt", 0) + f.get("spacing_before_pt", 0)
+            return f'<div style="height:{max(gap, 1) * 0.8:.1f}pt"></div>' if not in_cell else ""
+        return f'<p{cls} style="{";".join(css)}">{"".join(inner)}</p>'
+
+    def _table(self, t):
+        tw = sum(t.widths)
+        cols = "".join(f'<col style="width:{w / tw * 100:.2f}%">' for w in t.widths)
+        first = t.grid[0][0].paragraphs[0].runs
+        kind = ""
+        if first and first[0].kind == "t" and first[0].a[0] == "PART":
+            kind = " part"
+        elif t.rows == 1 and t.cols == 1 and t.grid[0][0].shade in ("#EEF3FB", "#FFF4E5"):
+            kind = " tipbox" if t.grid[0][0].shade == "#EEF3FB" else " warnbox"
+        elif all(not any(r.kind == "t" for p in c.paragraphs for r in p.runs) for row in t.grid[:1] for c in row) and any(
+                r.kind == "img" for c in t.grid[0] for p in c.paragraphs for r in p.runs):
+            kind = " pics"
+        elif t.rows == 1 and t.cols == 1 and t.grid[0][0].shade == "#1F3864":
+            kind = " chapter"
+        rows = []
+        for row in t.grid:
+            tds = []
+            for c in row:
+                st = f' style="background:{c.shade}"' if c.shade else ""
+                has_img = any(r.kind == "img" for p in c.paragraphs for r in p.runs)
+                cl = ' class="img"' if has_img else ""
+                tds.append(f"<td{cl}{st}>" + "".join(self._para(p, True) for p in c.paragraphs) + "</td>")
+            rows.append("<tr>" + "".join(tds) + "</tr>")
+        width = f"width:{t.width_mm}mm" if t.width_mm else "width:100%"
+        return f'<table class="t{kind}" style="{width}"><colgroup>{cols}</colgroup>{"".join(rows)}</table>'
+
+    def _blocks_html(self, blocks):
+        return "".join(self._chunks(blocks))
+
+    def _chunks(self, blocks):
+        out, i = [], 0
+        while i < len(blocks):
+            kind, b = blocks[i]
+            if kind == "p" and self.paras.get(b.para_pr_id_ref, {}).get("keep_with_next"):
+                # 소제목은 다음 덩어리와 떨어지지 않게 묶음
+                grp = [self._para(b)]
+                j = i + 1
+                while j < len(blocks) and blocks[j][0] == "p" and not blocks[j][1].runs:
+                    j += 1
+                if j < len(blocks):
+                    grp.append(self._para(blocks[j][1]) if blocks[j][0] == "p" else self._table(blocks[j][1]))
+                    # 소제목 다음이 한 줄 설명이면 그 아래 표·그림까지 함께
+                    if blocks[j][0] == "p" and j + 1 < len(blocks) and blocks[j + 1][0] == "t":
+                        j += 1; grp.append(self._table(blocks[j][1]))
+                out.append('<div class="keep">' + "".join(grp) + "</div>"); i = j + 1; continue
+            h = self._para(b) if kind == "p" else self._table(b)
+            if kind == "t" and ('class="t tipbox"' in h or 'class="t warnbox"' in h) and out:
+                k = len(out) - 1   # 사이의 빈 간격 문단은 건너뛰고 앞 덩어리와 함께 묶음
+                while k > 0 and out[k].startswith('<div style="height:'):
+                    k -= 1
+                out[k:] = ['<div class="keep">' + "".join(out[k:]) + h + "</div>"]
+            else:
+                out.append(h)
+            i += 1
+        # 빈 간격 문단은 쪽 배치에서 따로 쓰지 않음(간격은 쪽마다 고르게 나눔)
+        return [c for c in out if not c.startswith('<div style="height:')]
+
+    def save(self, path):
+        cover, body, seen = [], [], False
+        for kind, b in self.blocks:
+            if kind == "p" and self.paras.get(b.para_pr_id_ref, {}).get("page_break_before"):
+                if seen:
+                    body.append(("brk", None))
+                seen = True
+                continue
+            (body if seen else cover).append((kind, b))
+        while cover and cover[0][0] == "p" and not cover[0][1].runs:
+            cover.pop(0)
+        css = open(os.path.join(os.path.dirname(__file__), "guide.css"), encoding="utf-8").read().replace("FONT_DIR", os.path.abspath(FONT_DIR))
+        head = f'<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>{css}</style></head>'
+        path = os.path.abspath(path); base = os.path.splitext(path)[0]
+        with open(base + "_cover.html", "w", encoding="utf-8") as f:
+            f.write(head + '<body class="cover"><div class="band"></div><div class="coverwrap">' + self._blocks_html(cover)
+                    + '</div><div class="coverfoot"><span>AX 리더 팀 프로젝트 · 9팀</span><span>2026. 10.</span></div></body></html>')
+        chunks, forced = [], set()
+        seg = []
+        for kind, b in body + [("brk", None)]:
+            if kind == "brk":
+                if seg:
+                    chunks += self._chunks(seg); seg = []
+                forced.add(len(chunks))
+            else:
+                seg.append((kind, b))
+        is_part = ['class="t part"' in c or 'class="t chapter"' in c for c in chunks]
+        # ① 덩어리 높이 재기
+        with open(base + "_measure.html", "w", encoding="utf-8") as f:
+            f.write(head + '<body><div style="width:176mm">' + "".join(f'<div class="blk">{c}</div>' for c in chunks) + "</div></body></html>")
+        import json
+        m = json.loads(subprocess.run(["node", MEASURE_JS, base + "_measure.html"], check=True, capture_output=True, text=True).stdout)
+        # ② 쪽 나누기: 그림은 0.82~1.35배로 줄이고 늘릴 수 있다고 보고 순서대로 채움, 장 띠는 쪽 아래 40%에 오지 않게
+        H, SMIN = PAGE_H, 0.82
+        pages, cur, fixed, img = [], [], 0.0, 0.0
+        for k, (hgt, ih) in enumerate(m):
+            fx, im = hgt - ih, ih
+            need = fixed + fx + (img + im) * SMIN + GAP_MIN * len(cur)
+            part_low = is_part[k] and cur and (fixed + img) > H * 0.6
+            if cur and (need > H or part_low or k in forced):
+                pages.append(cur); cur, fixed, img = [], 0.0, 0.0
+            cur.append(k); fixed += fx; img += im
+        pages.append(cur)
+        appx = lambda pg: any('APPENDIX' in chunks[k] for k in pg)
+        with open(base + "_body.html", "w", encoding="utf-8") as f:
+            f.write(head + "<style>@page{size:A4;margin:19mm 17mm 16mm 17mm} body{width:176mm}</style><body>"
+                    + "".join(f'<section class="page{" appx" if appx(pg) else ""}">' + "".join(f'<div class="blk">{chunks[k]}</div>' for k in pg) + "</section>" for pg in pages)
+                    + f"<script>{FILL_JS}</script></body></html>")
+        self.layout = subprocess.run(["node", PDF_JS, base + "_cover.html", base + "_body.html", path, self.header], check=True, capture_output=True, text=True).stdout
+        import pymupdf
+        doc = pymupdf.open(path + ".cover.pdf"); doc.insert_pdf(pymupdf.open(path + ".body.pdf"))
+        doc.set_metadata({"title": "TM-CBM 사용 가이드", "author": "9팀", "subject": "견인전동기(TM) 진단·수선의뢰 관리 앱 사용 가이드"})
+        doc.save(path, deflate=True, garbage=3); os.remove(path + ".cover.pdf"); os.remove(path + ".body.pdf")
+        print(self.layout)
+        return True, ()
+
+
+PAGE_H = 297 - 19 - 16 - 2   # 본문 높이(mm), 2mm 여유
+GAP_MIN = 2.2                 # 덩어리 사이 최소 간격(mm)
+MEASURE_JS = os.path.join(os.path.dirname(__file__), "measure.cjs")
+FILL_JS = """
+// 쪽마다: 그림 배율을 맞춰 높이를 채우고, 남는 공간은 덩어리 사이에 고르게 나눔
+const MM = 96 / 25.4, H = %(H)s * MM, GMIN = %(G)s * MM, GMAX = 9 * MM;
+const report = [];
+document.querySelectorAll('section.page').forEach((pg, n) => {
+  const blks = [...pg.querySelectorAll(':scope > .blk')], imgs = [...pg.querySelectorAll('img.sc')];
+  const used = () => blks.reduce((a, b) => a + b.getBoundingClientRect().height, 0) + GMIN * (blks.length - 1);
+  const setS = s => imgs.forEach(im => { im.style.width = (im.dataset.w * s) + 'mm'; im.style.height = (im.dataset.h * s) + 'mm'; });
+  let lo = 0.7, hi = 1.35, s = 1;
+  if (imgs.length) { setS(hi); if (used() > H) { for (let i = 0; i < 18; i++) { s = (lo + hi) / 2; setS(s); if (used() > H) hi = s; else lo = s; } s = lo; setS(s); } else s = hi; }
+  let free = H - used();
+  if (free > blks.length * GMAX) {
+    const tds = [...pg.querySelectorAll('table.t:not(.part):not(.chapter) td:not(.img)')];
+    const base = tds.map(td => parseFloat(getComputedStyle(td).paddingTop));
+    for (let add = 0.5; add <= 6; add += 0.5) {
+      tds.forEach((td, i) => { td.style.paddingTop = td.style.paddingBottom = (base[i] + add) + 'px'; });
+      if (H - used() < blks.length * GMAX * 0.6) break;
+    }
+    if (H - used() < 0) tds.forEach((td, i) => { td.style.paddingTop = td.style.paddingBottom = base[i] + 'px'; });
+    free = H - used();
+  }
+  const gap = blks.length > 1 ? Math.min(GMAX, GMIN + Math.max(0, free) / (blks.length - 1)) : 0;
+  blks.forEach((b, i) => { b.style.marginTop = i ? gap + 'px' : '0'; });
+  const end = blks.length ? blks[blks.length - 1].getBoundingClientRect().bottom - blks[0].getBoundingClientRect().top : 0;
+  report.push({ page: n + 1, scale: +s.toFixed(2), fill: +(end / H * 100).toFixed(1), overflow: end > H + 1 });
+});
+window.__layout = report;
+""" % {"H": PAGE_H, "G": GAP_MIN}
