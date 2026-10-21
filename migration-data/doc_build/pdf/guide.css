@@ -179,3 +179,11 @@ table.t.pics p.it:first-child { margin-top: 0 !important; padding-top: 0; }
 .coverwrap p.goto { margin-top: 6pt !important; }
 .coverwrap p.goto span { background: #E0362C !important; color: #fff !important; font-size: 10.5pt !important; font-weight: 800;
   padding: 2.5pt 10pt !important; border-radius: 12pt; box-shadow: 0 1pt 2pt rgba(0,0,0,.18); }
+/* 사진 위 이름표 */
+p.lab { margin: 4pt 0 3pt !important; }
+p.lab span { display: inline-block; background: #1F3864; color: #fff !important; border-radius: 4pt; padding: 2pt 9pt; font-size: 10.5pt !important; }
+p.lab b.cn { color: #FFD3CF !important; }
+/* 내어쓰기(문서 전체): "- " 는 0.9em, ①·✔·1) 은 1.25em */
+p.hang { padding-left: 0.9em; text-indent: -0.9em; }
+p.hang.hang2 { padding-left: 1.3em; text-indent: -1.3em; }
+p.h2.hang { padding-left: 0; text-indent: 0; }

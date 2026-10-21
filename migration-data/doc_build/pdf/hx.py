@@ -151,6 +151,12 @@ class Doc:
         if f.get("spacing_after_pt"):
             css.append(f"margin-bottom:{f['spacing_after_pt']}pt")
         cls = f' class="{f["cls"]}"' if f.get("cls") else ""
+        raw0 = "".join(r.a[0] for r in p.runs if r.kind == "t").lstrip()
+        if re.match(r"^(- |[①-⑳] |✔ |□ |\d\) )", raw0):   # 내어쓰기: 둘째 줄부터 글머리 뒤에 맞춤
+            extra = " hang2" if re.match(r"^[①-⑳✔□]|^\d\)", raw0) else ""
+            cls = ' class="' + (f.get("cls") or "") + " hang" + extra + '"'
+        if al == "justify":
+            css[0] = "text-align:left"
         if f.get("bottom_border"):
             cls = ' class="h2"'
             raw = "".join(r.a[0] for r in p.runs if r.kind == "t")
