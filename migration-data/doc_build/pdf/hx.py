@@ -405,5 +405,8 @@ document.querySelectorAll('section.page').forEach((pg, n) => {
   const end = blks.length ? blks[blks.length - 1].getBoundingClientRect().bottom - blks[0].getBoundingClientRect().top : 0;
   report.push({ page: n + 1, scale: +s.toFixed(2), fill: +(end / H * 100).toFixed(1), overflow: end > H + 1 });
 });
+const secmap = {};
+document.querySelectorAll('section.page').forEach((pg, n) => pg.querySelectorAll('p.h2 .hn').forEach(h => { const k = h.textContent.trim(); if (k && !(k in secmap)) secmap[k] = n + 1; }));
+window.__secmap = secmap;
 window.__layout = report;
 """ % {"H": PAGE_H, "G": GAP_MIN}

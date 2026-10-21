@@ -168,3 +168,8 @@ table.t.pics p.it { margin-top: 5pt !important; padding-top: 5pt; }
 table.t.pics p.it span { font-size: 11.2pt !important; }
 table.t.pics p.it span[style*="font-weight:700"] { font-size: 11.6pt !important; }
 table.t.pics p.it:first-child { margin-top: 0 !important; padding-top: 0; }
+
+/* 표지 카드: 화면 + 제목 + 바로가기 쪽 */
+.coverwrap table.t td.img { background: #fff; padding: 3pt !important; }
+.coverwrap p.goto { margin-top: 4pt !important; }
+.coverwrap p.goto span { display: inline-block; background: #1F3864; color: #fff !important; border-radius: 10pt; padding: 1.2pt 8pt; font-size: 9.5pt !important; }
