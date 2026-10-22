@@ -24,3 +24,6 @@ for i,p in enumerate(d):
 print('glyph check', 'OK' if not n else f'{n} pages broken')"
 # 잘림·튀어나옴 검사(번호 동그라미·사진·표가 칸이나 본문 폭 밖으로 나가면 보고)
 node pdfmod/overflow.cjs $PWD/pdfout/TM-CBM_사용가이드_body.html $PWD/pdfout/TM-CBM_사용가이드_cover.html | tail -15
+# 줄바꿈 검사(줄이 기호로 시작, 마지막 줄 너무 짧음, 강조가 두 줄로 쪼개짐)
+node pdfmod/linebreak.cjs $PWD/pdfout/TM-CBM_사용가이드_body.html | tail -15
+node pdfmod/linebreak.cjs $PWD/pdfout/TM-CBM_사용가이드_cover.html | tail -5
