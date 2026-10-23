@@ -41,6 +41,17 @@ const convs: [string[], string][] = [
   [["116편성 상태", "2TM 다 보여줘"], "116편성 2TM 6대"],
   [["관찰 TM 알려줘", "고마워"], "천만에요"],
   [["예비품 몇 개", "히타치는?"], "히타치 예비품"],
+  [["주의 TM 목록", "두 번째 거 왜 주의야"], "최종 등급: 주의"],
+  [["주의 TM 목록", "2번째 리포트"], "등급: 주의"],
+  [["오늘 뭐부터 점검해", "첫 번째 거 이력"], "88091-48 · 111 111-1511-TM3 — 이력"],
+  [["1416호차 상태", "세 번째 거 왜 주의야"], "88091-68 (116편성"],
+  [["고장 많이 난 TM", "마지막 거 상태"], "등급:"],
+  [["예비품 몇 개", "오늘 뭐부터 점검해야 돼"], "우선 점검 대상"],
+  [["관찰이 뭐야", "긴급 몇 대?"], "긴급"],
+  [["88091-48 상태", "그렇구나"], "네!"],
+  [["116편성 상태", "긴급 TM 알려줘"], "우선 점검 대상(긴급) 2대"],
+  [["116편성 상태", "긴급은?"], "116편성 긴급"],
+
 ];
 
 let fail = 0;
@@ -55,6 +66,7 @@ for (const [turns, must] of convs) {
     if (a.formation !== undefined) ctx.lastFormation = a.formation;
     if (a.serial !== undefined) ctx.lastSerial = a.serial;
     ctx.lastTopic = a.topic ?? null;
+    if (a.list !== undefined) ctx.lastList = a.list;
     last = a.text;
   }
   const ok = last.includes(must);
