@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>i누리 입력용 TM-CBM</title>
+<style>
+  :root { --ink:#1b1f24; --sub:#5b6470; --line:#c9d1dc; --head:#e8eef7; --navy:#1f3864; --bg:#ffffff; --note:#fff7e6; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink:#e6e9ee; --sub:#a6afbb; --line:#3a4350; --head:#22303f; --navy:#9db8e8; --bg:#12161b; --note:#2b2416; } }
+  :root[data-theme="dark"] { --ink:#e6e9ee; --sub:#a6afbb; --line:#3a4350; --head:#22303f; --navy:#9db8e8; --bg:#12161b; --note:#2b2416; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.7 "맑은 고딕","Malgun Gothic",sans-serif; }
+  .wrap { max-width:900px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { font-size:20px; margin:0 0 4px; color:var(--navy); }
+  .guide { color:var(--sub); font-size:13px; margin-bottom:20px; }
+  .field { border:1px solid var(--line); border-radius:8px; margin:18px 0; overflow:hidden; }
+  .field > .label { background:var(--head); padding:8px 14px; font-weight:700; color:var(--navy); }
+  .field > .body { padding:12px 16px; }
+  .note { background:var(--note); padding:8px 12px; border-radius:6px; font-size:13px; margin:8px 0; }
+  table { border-collapse:collapse; width:100%; margin:8px 0; font-size:14px; }
+  th, td { border:1px solid #999; padding:6px 8px; }
+  th { background:#dfe6f2; color:#1b1f24; }
+  p { margin:2px 0; }
+  .i1 { padding-left:1em; } .i2 { padding-left:2em; }
+</style>
+</head>
+<body><div class="wrap">
+<h1>i누리 업무개선사례 입력용 — TM-CBM</h1>
+<div class="guide">칸마다 회색 제목 아래 내용을 마우스로 끌어 복사 → i누리 해당 칸 [디자인] 탭에 붙여넣기 (표도 그대로 붙음)<br>
+숫자는 앱 실제 데이터(TM 171대·교체이력 123건·측정값 170건) 기준 · 2026. 10. 28.</div>
+
+<div class="field"><div class="label">경영목표 연계</div><div class="body"><p>안전우선</p></div></div>
+
+<div class="field"><div class="label">업무개선사례명</div><div class="body">
+<p>AI·음성 비서 기반 노후 견인전동기(TM) 상태기반정비 체계 구축</p>
+</div></div>
+
+<div class="field"><div class="label">추진배경</div><div class="body">
+<p>□ 노후 견인전동기 현황</p>
+<p class="i1">○ 견인전동기(TM) : 전동차 바퀴를 돌리는 모터. 1호선 운영 144대 중 139대(96%)가 30년 이상 사용(평균 39년, 최장 53년)</p>
+<p class="i1">○ 최근 교체 123건 중 106건(86%)이 고장이 난 뒤에 교체 → 미리 찾아 고치지 못하고 고장 후 대응 위주</p>
+<p>□ 문제점</p>
+<p class="i1">○ 설치 위치·교체 이력·측정값이 여러 엑셀과 종이 측정표에 흩어져 TM 한 대의 상태를 한눈에 보기 어려움</p>
+<p class="i1">○ 어느 TM이 위험한지 판단을 담당자 경험에 의존, 정비 기준은 문서 3종 173쪽을 매번 직접 찾아봄</p>
+<p class="i1">○ '26.3.23. 소사역 견인전동기 아크·연기 발생 → 승객 하차·운행 중단</p>
+<p class="i2">→ 고장 나기 전에 상태를 보고 먼저 정비하는 체계(상태기반정비) 필요</p>
+</div></div>
+
+<div class="field"><div class="label">추진내용</div><div class="body">
+<p>□ 개선내용 : 노후 TM 상태기반정비 시스템 직접 구축(휴대폰·PC 겸용, 설치 불필요)</p>
+<table>
+<tr><th style="width:22%">구분</th><th style="width:39%">개선 전</th><th style="width:39%">개선 후</th></tr>
+<tr><td>TM 찾기·이력</td><td>엑셀 열어 검색, 자료 분산</td><td>위치·시리얼 입력으로 171대 이력 바로 조회</td></tr>
+<tr><td>위험 판단</td><td>담당자 경험에 의존</td><td>144대 위험 등급 자동 판정(긴급·주의·관찰·정상)</td></tr>
+<tr><td>점검 기록</td><td>측정표 종이·엑셀 보관</td><td>측정값 입력 → 기준 이탈·추세·남은 수명 자동 표시</td></tr>
+<tr><td>정비 계획</td><td>공정표·주기 직접 확인</td><td>입고 편성별 점검 대상 자동 편성, 현장 기록지(QR) 인쇄</td></tr>
+<tr><td>정비 기준 찾기</td><td>문서 3종 173쪽 직접 검색</td><td>질문하면 AI가 근거 쪽수와 함께 바로 답변</td></tr>
+<tr><td>고장 기록</td><td>엑셀 입력, 분류 제각각</td><td>대화·음성으로 등록, 고장코드 7종 자동 분류</td></tr>
+</table>
+<p class="i1">○ 주요 기능</p>
+<p class="i2">- (위험 등급) 최근 5년 고장 횟수 × 가장 심했던 고장의 심각도로 4단계 판정(철도 안전 국제표준 EN 50126 방식)</p>
+<p class="i2">- (상태 점검) 절연저항·브러시 길이·스프링 압력을 TM별로 쌓아 나빠지는 추세와 교체 시점 예측</p>
+<p class="i2">- (AI 어시스턴트) 정비지침서 등 문서 3종 검색·답변, 대화로 수선의뢰 접수, TM별 AI 판단</p>
+<p class="i2">- (음성 AI 비서) 시스템 주요 기능을 말로 지시·실행(조회·수선의뢰·점검 기록·리포트 한글/워드/PDF 발행)</p>
+<p class="i2">- (연계 분석) 경미장애·주행거리·생애주기 연계, 예비품 부족 시점 예측</p>
+<p>□ 추진경과 및 노력 내용</p>
+<table>
+<tr><th style="width:22%">시기</th><th>내용</th></tr>
+<tr><td>'26. 3.~ 7.</td><td>소사역 사고 계기 현장 문제 분석, 교체 이력·측정표·정비문서 자료 조사</td></tr>
+<tr><td>'26. 8.</td><td>시스템 개발 착수(8.5.), 고장·교체 이력 123건 엑셀 → 시스템 이관, 위험 등급 판정 구축</td></tr>
+<tr><td>'26. 8.~ 9.</td><td>정비문서 3종 173쪽 디지털화(스캔 문서 글자 인식) → AI 검색·근거 쪽수 답변</td></tr>
+<tr><td>'26. 10.</td><td>측정값 170건 이관, 상태 점검·정비 일정·수명 예측, 음성 AI 비서 구축, 사용 가이드 제작</td></tr>
+</table>
+<p class="i1">○ 바이브 코딩(AI에게 말로 지시해 프로그램을 만드는 방식)으로 담당자가 직접 개발 → 외부 용역 없음</p>
+<p class="i1">○ 챗봇 예상 질문 2,800여 개로 답변 검증, 과거 고장 이력으로 판정·분류 정확도 검증</p>
+<p class="i1">○ 관련 근거 : AX리더 9팀 과제 「견인전동기 통합관리 시스템」 결과물 및 사용 가이드(첨부)</p>
+<div class="note">※ 공문(시범운영 계획·결과 보고 등)이 있으면 위 '관련 근거'에 문서번호(예: 군자차-0000('26.0.0.))를 적어 주세요. 이 줄은 지우고 붙여넣으세요.</div>
+<p>※ 세부내용은 첨부파일 확인 부탁드립니다.</p>
+</div></div>
+
+<div class="field"><div class="label">개선효과</div><div class="body">
+<p>□ 정량적 효과</p>
+<table>
+<tr><th style="width:22%">항목</th><th style="width:33%">효과</th><th>산출근거</th></tr>
+<tr><td>점검 대상 집중</td><td>144대 일률 관리 → 우선 점검 34대(24%) 선별</td><td>운영 144대 자동 판정 결과 긴급 3대 + 주의 31대</td></tr>
+<tr><td>고장분류 표준화</td><td>자동 분류 정확도 92.9%</td><td>기존 고장 이력 112건의 내용을 다시 분류해 저장된 고장코드와 대조, 104건 일치</td></tr>
+<tr><td>반복 고장 사전 선별</td><td>재고장 TM 6대 중 5대를 고장 전 '주의' 이상으로 분류</td><td>'23~'25년 기준일마다 그때까지 이력만으로 등급 산출 후 이듬해 실제 고장과 대조</td></tr>
+<tr><td>자료 통합</td><td>흩어진 자료 → TM 171대 시리얼별 하나로</td><td>교체 이력 123건 + 측정값 170건 + 정비문서 3종 173쪽</td></tr>
+<tr><td>개발 비용</td><td>외부 용역 없이 자체 개발</td><td>담당자 직접 개발</td></tr>
+</table>
+<p>□ 정성적 효과</p>
+<p class="i1">○ (안전) 고장 후 교체 → 상태를 보고 먼저 정비하는 방식으로 전환, 운행장애 위험 감소</p>
+<p class="i1">○ (업무 효율) 정비 기준·이력 찾기, 기록, 리포트 작성을 휴대폰에서 바로 처리(음성 가능)</p>
+<p class="i1">○ (노하우) 숙련자의 경험을 데이터로 축적 → 기록이 쌓일수록 판정·예측 신뢰도 향상</p>
+<p class="i1">○ (기록 품질) 현장에서 바로 입력하고 누락·중복을 자동 점검 → 이력 정확도 향상</p>
+</div></div>
+
+<div class="field"><div class="label">횡단전개 가능성</div><div class="body">
+<p>□ 타 장치 적용 : 장치 확장 기능으로 제동장치·보조전원장치(SIV) 등에 같은 체계 적용 가능</p>
+<p class="i1">○ 장치 자료(양식 파일)만 올리면 현황판·상태 점검·위험 등급·수명 예측·챗봇을 그대로 사용</p>
+<p>□ 타 차량사업소·호선 : 자료만 바꾸면 바로 적용, 설치 없이 직원 휴대폰으로 사용</p>
+</div></div>
+
+<div class="field"><div class="label">향후계획</div><div class="body">
+<p>□ 입고 편성 점검 계획·현장 기록지를 활용한 현장 시범 운영 및 사용자 의견 반영</p>
+<p>□ 점검 데이터 축적으로 수명 예측 신뢰도 향상</p>
+<p>□ 외부 클라우드 사용 보안 검토 후 타 장치·타 사업소 확대 적용</p>
+</div></div>
+
+</div></body>
+</html>
